@@ -1464,6 +1464,21 @@
     initSettings();  
     updateCustomerDropdown();
     renderItems();  
+    // تفعيل المزامنة التلقائية
+    if(currentUser) {
+        firebase.database().ref('users/' + currentUser.uid).on('value', snap => {
+            if(snap.exists()) {
+                let data = snap.val();
+                if(data.items) items = data.items;
+                if(data.archive) archive = data.archive;
+                if(data.expenses) expenses = data.expenses;
+                if(data.suppliers) suppliers = data.suppliers;
+                if(data.settings) settings = data.settings;
+                renderItems(); renderArchive(); renderDebts(); updateCustomerDropdown();
+            }
+        });
+    }
+
 </script>
 </body>  
 </html>
