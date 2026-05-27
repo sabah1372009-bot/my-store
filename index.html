@@ -1464,6 +1464,18 @@
     initSettings();  
     updateCustomerDropdown();
     renderItems();  
+       // الكود السحري لرفع البيانات فوراً للسحابة
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = function(key, value) {
+        originalSetItem.apply(this, arguments);
+        if(typeof currentUser !== 'undefined' && currentUser) {
+            let validKeys = ['items', 'archive', 'expenses', 'suppliers', 'settings'];
+            if(validKeys.includes(key)) {
+                firebase.database().ref('users/' + currentUser.uid + '/' + key).set(JSON.parse(value));
+            }
+        }
+    };
+
     // تفعيل المزامنة التلقائية
     if(currentUser) {
         firebase.database().ref('users/' + currentUser.uid).on('value', snap => {
