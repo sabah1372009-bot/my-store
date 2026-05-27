@@ -812,6 +812,10 @@
         let netTotal = currentInvoiceTotal - discountAmount;
         let remainingAmount = netTotal - paidAmount;  
         let invType = document.getElementById("invoiceType").value;  
+                if(invType === 'راجع') {
+            remainingAmount = -Math.abs(remainingAmount);
+            netTotal = -Math.abs(netTotal);
+        }
           
         const newArchive = {  
             id: Date.now(), invNo: Math.floor(Math.random() * 900000) + 100000, date: new Date().toLocaleDateString('en-GB'),  
