@@ -1464,32 +1464,41 @@
     initSettings();  
     updateCustomerDropdown();
     renderItems();  
-       // الكود السحري لرفع البيانات فوراً للسحابة
-    const originalSetItem = localStorage.setItem;
-    localStorage.setItem = function(key, value) {
-        originalSetItem.apply(this, arguments);
-        if(typeof currentUser !== 'undefined' && currentUser) {
-            let validKeys = ['items', 'archive', 'expenses', 'suppliers', 'settings'];
-            if(validKeys.includes(key)) {
-                firebase.database().ref('users/' + currentUser.uid + '/' + key).set(JSON.parse(value));
-            }
+           // محرك المزامنة الذكي الشامل
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+            window.currentUser = user; 
+            // 1. استلام البيانات لحظياً من السحابة
+            firebase.database().ref('users/' + user.uid).on('value', function(snap) {
+                if(snap.exists()) {
+                    let dbData = snap.val();
+                    if(dbData.items) { items = dbData.items; localStorage.setItem('items', JSON.stringify(items)); }
+                    if(dbData.archive) { archive = dbData.archive; localStorage.setItem('archive', JSON.stringify(archive)); }
+                    if(dbData.expenses) { expenses = dbData.expenses; localStorage.setItem('expenses', JSON.stringify(expenses)); }
+                    if(dbData.suppliers) { suppliers = dbData.suppliers; localStorage.setItem('suppliers', JSON.stringify(suppliers)); }
+                    if(typeof renderItems === 'function') renderItems();
+                    if(typeof renderArchive === 'function') renderArchive();
+                    if(typeof renderDebts === 'function') renderDebts();
+                }
+            });
         }
-    };
+    });
 
-    // تفعيل المزامنة التلقائية
-    if(currentUser) {
-        firebase.database().ref('users/' + currentUser.uid).on('value', snap => {
-            if(snap.exists()) {
-                let data = snap.val();
-                if(data.items) items = data.items;
-                if(data.archive) archive = data.archive;
-                if(data.expenses) expenses = data.expenses;
-                if(data.suppliers) suppliers = data.suppliers;
-                if(data.settings) settings = data.settings;
-                renderItems(); renderArchive(); renderDebts(); updateCustomerDropdown();
-            }
-        });
-    }
+    // 2. الرفع التلقائي للسحابة بعد أي حركة أو ضغطة زر
+    document.addEventListener('click', function() {
+        if (typeof currentUser !== 'undefined' && currentUser) {
+            setTimeout(function() {
+                let localData = {
+                    items: typeof items !== 'undefined' ? items : [],
+                    archive: typeof archive !== 'undefined' ? archive : [],
+                    expenses: typeof expenses !== 'undefined' ? expenses : [],
+                    suppliers: typeof suppliers !== 'undefined' ? suppliers : []
+                };
+                firebase.database().ref('users/' + currentUser.uid).set(JSON.parse(JSON.stringify(localData)));
+            }, 1000); // ينتظر ثانية حتى يكمل التطبيق شغله ويرفع للسحابة بصمت
+        }
+    });
+
 
 </script>
 </body>  
