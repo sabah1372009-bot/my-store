@@ -1479,7 +1479,6 @@
         const search = document.getElementById("searchCrm") ? document.getElementById("searchCrm").value.trim().toLowerCase() : "";
         if (!list) return;
         list.innerHTML = "";
-        renderCrm();
 
         if (!archive || archive.length === 0) {
             list.innerHTML = "<p style='text-align:center; padding:20px; color:var(--sub-text);'>لا يوجد عملاء في الأرشيف بعد.</p>";
@@ -1539,6 +1538,12 @@
     initSettings();  
     updateCustomerDropdown();
     renderItems();  
+        renderCrm();
+
+    let crmPage = document.getElementById("view-crm");
+    let appMain = document.getElementById("main-app");
+    if(crmPage && appMain) { appMain.appendChild(crmPage); }
+
            // محرك المزامنة الذكي الشامل
     firebase.auth().onAuthStateChanged(function(user) {
         if (user) {
