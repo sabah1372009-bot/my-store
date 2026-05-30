@@ -1473,6 +1473,66 @@
     }  
 
     function showToast(text) { const t = document.getElementById("toast"); t.innerText = text; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 3000); }
+    function renderCrm() {
+        const list = document.getElementById("crmList");
+        const search = document.getElementById("searchCrm") ? document.getElementById("searchCrm").value.trim().toLowerCase() : "";
+        if (!list) return;
+        list.innerHTML = "";
+        renderCrm();
+
+        if (!archive || archive.length === 0) {
+            list.innerHTML = "<p style='text-align:center; padding:20px; color:var(--sub-text);'>لا يوجد عملاء في الأرشيف بعد.</p>";
+            return;
+        }
+
+        let customersData = {};
+        archive.forEach(inv => {
+            let cName = (inv.customer && inv.customer.trim() !== "") ? inv.customer.trim() : "زبون بدون اسم";
+            if (!customersData[cName]) {
+                customersData[cName] = { name: cName, phone: inv.phone || "", totalDebt: 0, totalVolume: 0 };
+            }
+            customersData[cName].totalDebt += parseFloat(inv.remaining) || 0;
+            customersData[cName].totalVolume += parseFloat(inv.total) || 0;
+            if(inv.phone && customersData[cName].phone === "") {
+                customersData[cName].phone = inv.phone;
+            }
+        });
+
+        let cArray = Object.values(customersData);
+        if (search !== "") {
+            cArray = cArray.filter(c => c.name.toLowerCase().includes(search));
+        }
+
+        cArray.sort((a, b) => b.totalDebt - a.totalDebt);
+
+        cArray.forEach(c => {
+            let phoneBtn = c.phone ? `<a href="https://wa.me/${c.phone.replace(/^0+/, '+964')}" target="_blank" class="btn-main" style="background:#25D366; padding:5px 10px; width:auto; text-decoration:none; color:white; font-size:13px; border-radius:5px;">💬 واتساب</a>` : `<span style="font-size:12px; color:var(--sub-text);">لا يوجد رقم</span>`;
+            let debtColor = c.totalDebt > 0 ? "#dc3545" : "#28a745";
+            let debtText = c.totalDebt > 0 ? `مطلوب: ${c.totalDebt.toLocaleString()} د.ع` : `لا يوجد دين`;
+
+            let card = document.createElement("div");
+            card.className = "item-card";
+            card.style.flexDirection = "column";
+            card.style.alignItems = "stretch";
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
+                    <h4 style="margin:0; color:var(--text-color); font-size:16px;">👤 ${c.name}</h4>
+                    ${phoneBtn}
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:6px;">
+                    <span style="color:var(--sub-text);">إجمالي التعامل:</span>
+                    <b style="color:#007bff;">${c.totalVolume.toLocaleString()} د.ع</b>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;">
+                    <span style="color:var(--sub-text);">حالة الحساب:</span>
+                    <b style="color:${debtColor};">${debtText}</b>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+        
+        if(cArray.length === 0) list.innerHTML = "<p style='text-align:center; color:var(--sub-text);'>لم يتم العثور على زبون مطابق.</p>";
+    }
 
     if (localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');  
     initSettings();  
