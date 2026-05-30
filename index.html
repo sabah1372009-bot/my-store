@@ -1546,7 +1546,7 @@
     let crmPage = document.getElementById("view-crm");
     let appMain = document.getElementById("main-app");
     if(crmPage && appMain) { appMain.appendChild(crmPage); }
-        function printCrm() {
+            function printCrm() {
         if (!archive || archive.length === 0) { alert("لا توجد بيانات!"); return; }
         
         let customersData = {};
@@ -1565,20 +1565,27 @@
         let printArea = document.getElementById("printArea");
         if (!printArea) { printArea = document.createElement("div"); printArea.id = "printArea"; document.body.appendChild(printArea); }
 
-        let html = `<div style="text-align: center; margin-bottom: 20px;"><h2>كشف ديون العملاء</h2><p>تاريخ الطباعة: ${new Date().toLocaleDateString('en-GB')}</p></div>`;
-        html += `<table style="width: 100%; border-collapse: collapse;" border="1"><tr style="background-color: #f0f0f0;"><th style="padding: 8px;">الزبون</th><th style="padding: 8px;">الهاتف</th><th style="padding: 8px;">الدين (د.ع)</th></tr>`;
+        let html = `<div style="text-align: center; margin-bottom: 20px; direction: rtl;"><h2>كشف ديون العملاء</h2><p>تاريخ الطباعة: ${new Date().toLocaleDateString('en-GB')}</p></div>`;
+        html += `<table style="width: 100%; border-collapse: collapse; direction: rtl;" border="1"><tr style="background-color: #f0f0f0;"><th style="padding: 8px;">الزبون</th><th style="padding: 8px;">الهاتف</th><th style="padding: 8px;">الدين (د.ع)</th></tr>`;
         
-        cArray.forEach(c => { html += `<tr><td style="padding: 8px; text-align: center;">${c.name}</td><td style="padding: 8px; text-align: center;">${c.phone}</td><td style="padding: 8px; text-align: center;" dir="ltr">${c.totalDebt.toLocaleString()}</td></tr>`; });
+        cArray.forEach(c => { html += `<tr><td style="padding: 8px; text-align: right;">${c.name}</td><td style="padding: 8px; text-align: center;">${c.phone}</td><td style="padding: 8px; text-align: center;" dir="ltr">${c.totalDebt.toLocaleString()}</td></tr>`; });
         
-        html += `</table><h3 style="text-align: left; margin-top: 15px;">إجمالي الديون المطلوبة: ${totalAllDebts.toLocaleString()} د.ع</h3>`;
+        html += `</table><h3 style="text-align: left; margin-top: 15px; direction: rtl;">إجمالي الديون المطلوبة: ${totalAllDebts.toLocaleString()} د.ع</h3>`;
         
         printArea.innerHTML = html;
         let mainApp = document.getElementById("main-app");
         mainApp.style.display = "none";
-        window.print();
-        mainApp.style.display = "block";
-        printArea.innerHTML = "";
+        
+        // إعطاء المتصفح وقت لإنشاء الـ PDF قبل مسح البيانات
+        setTimeout(() => {
+            window.print();
+            setTimeout(() => {
+                mainApp.style.display = "block";
+                printArea.innerHTML = "";
+            }, 2000); 
+        }, 500);
     }
+
 
 
            // محرك المزامنة الذكي الشامل
