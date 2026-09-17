@@ -74,6 +74,18 @@
         .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); border-radius: 8px; font-size: 15px; outline: none; }  
         .btn-save { background: #007bff; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; margin-bottom: 10px; cursor: pointer;} .btn-cancel { background: transparent; color: #dc3545; border: none; padding: 10px; width: 100%; font-size: 16px; cursor: pointer; font-weight: bold; }  
         
+        /* CSS للتابات (الوصولات المتعددة) */
+        #invoiceTabsContainer { display: flex; gap: 6px; overflow-x: auto; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border-color); }
+        .active-tab { background: #0b4a8f; color: white; padding: 6px 12px; border-radius: 5px; font-size: 13px; font-weight: bold; cursor: pointer; display:flex; align-items:center; gap:8px; white-space: nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.2);}
+        .inactive-tab { background: #e9ecef; color: #333; padding: 6px 12px; border-radius: 5px; font-size: 13px; cursor: pointer; display:flex; align-items:center; gap:8px; white-space: nowrap; border:1px solid #ccc;}
+        [data-theme="dark"] .inactive-tab { background: #333; color: #ddd; border-color:#555;}
+        .close-tab { color: #ff4d4d; font-size: 16px; cursor: pointer; line-height:1; }
+        .active-tab .close-tab { color: #ffb3b3; }
+        .active-tab .close-tab:hover { color: #fff; }
+        .add-tab-btn { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 5px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap;}
+        #invoiceTabsContainer::-webkit-scrollbar { height: 4px; }
+        #invoiceTabsContainer::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        
         .search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.2); border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1050; display: none; backdrop-filter: blur(10px); }
         .search-dropdown-item { padding: 12px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; display: flex; justify-content: space-between; font-weight: bold; font-size: 15px;} .search-dropdown-item:hover { background: rgba(0, 123, 255, 0.1); }
         .qty-btn { background-color: #6f42c1; color: white; border: none; width: 28px; height: 28px; border-radius: 5px; font-size: 18px; cursor: pointer; font-weight: bold; display: flex; justify-content: center; align-items: center; padding:0;}  
@@ -94,7 +106,8 @@
             body { background: #fff !important; color: #000 !important; padding: 0 !important; } 
             body::before, .no-print, .header, .bottom-nav, .app-view, .fab, .overlay, .auth-container { display: none !important; } 
             .modal { position: static; box-shadow: none; padding: 0; background: transparent; display: block; max-height: none; overflow: visible; } 
-            #addModal, #payModal, #historyModal, #itemHistoryModal, #empModal, #empAdvanceModal, #suspendedModal, #supImageModal, .modal-header, .input-group, .btn-save, .btn-cancel, #invoiceTableContainer, #invoiceTotalsContainer, #invoiceActionButtons { display: none !important; }  
+            
+            #addModal, #payModal, #historyModal, #itemHistoryModal, #empModal, #empAdvanceModal, #suspendedModal, #supImageModal, #lowStockModal, .modal-header, .input-group, .btn-save, .btn-cancel, #invoiceTableContainer, #invoiceTotalsContainer, #invoiceActionButtons, #invoiceTabsContainer { display: none !important; }  
             
             .print-only { display: block; direction: rtl; font-family: 'Arial', sans-serif; padding: 10px; } 
             .print-header { position: relative; text-align: center; margin-bottom: 15px; padding-top: 5px; } 
@@ -122,9 +135,9 @@
             .print-table th.th-total { background-color: #c82333 !important; -webkit-print-color-adjust: exact; } 
             
             .print-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px; font-weight: bold; font-size: 16px; } 
-            .signatures { display: flex; flex-direction: column; gap: 15px; width: 40%; } 
+            .signatures { display: flex; width: 100%; justify-content: space-around; align-items: flex-end; margin-top: 10px;} 
             
-            .print-summary-box { width: 50%; border: 2px solid #0b4a8f; border-radius: 5px; overflow: hidden; } 
+            .print-summary-box { width: 50%; border: 2px solid #0b4a8f; border-radius: 5px; overflow: hidden; margin-left:auto;} 
             .print-summary-row { display: flex; border-bottom: 2px solid #0b4a8f; } 
             .print-summary-row:last-child { border-bottom: none; } 
             .print-summary-label { padding: 6px 15px; width: 40%; -webkit-print-color-adjust: exact; } 
@@ -301,8 +314,18 @@
                 <div class="input-group"><label>رقم الهاتف الثاني</label><input type="tel" id="setPhone2"></div>
                 <div class="input-group"><label>العنوان في الوصل</label><input type="text" id="setAddress"></div>
                 <div class="input-group"><label>رابط اللوجو</label><input type="url" id="setLogo" placeholder="رابط صورة اللوجو"></div>
+                
+                <!-- مكان رفع الختم الإلكتروني -->
+                <div class="input-group" style="background:rgba(23,162,184,0.05); padding:10px; border-radius:8px; border:1px dashed #17a2b8;">
+                    <label style="color:#17a2b8;">الختم والتوقيع الإلكتروني (للوصولات)</label>
+                    <input type="file" id="setStampInput" accept="image/*" onchange="handleStampUpload(event)" style="margin-bottom:5px;">
+                    <img id="setStampPreview" src="" style="max-height:80px; border-radius:5px; display:none; background:#fff; padding:5px; border:1px solid #ddd;">
+                </div>
+
                 <button class="btn-save" onclick="saveSettings()">💾 حفظ الإعدادات</button>
                 <hr style="width:100%; border:0; border-top:1px solid #ddd;">
+                <button class="btn-save" style="background:#ffc107; color:#000;" onclick="annualArchiving()">🧹 الترحيل السنوي (تصفية النظام)</button>
+                <p style="font-size:11px; margin-top:-5px; color:var(--sub-text); text-align:center;">* يمسح الوصولات المسددة بالكامل لتخفيف السيرفر، ويحتفظ بالديون فقط.</p>
                 <button class="btn-save" style="background:#dc3545;" onclick="logoutApp()">🚪 تسجيل الخروج من السحابة</button>
             </div>
         </div>  
@@ -330,7 +353,6 @@
         <div class="input-group"><label>الكمية المتوفرة</label><input type="number" id="itemStock" placeholder="العدد في المخزن"></div>
         <div class="input-group"><label>القسم (التصنيف)</label><input type="text" id="itemCategory" list="categoryList"><datalist id="categoryList"></datalist></div>
         <div class="input-group"><label>القياس</label><input type="text" id="itemMeasure" placeholder="مثال: قطعة، متر"></div>
-        <!-- حقل اسم الشركة المجهزة لطلب النواقص -->
         <div class="input-group"><label>المجهز / الشركة (لطلب النواقص)</label><input type="text" id="itemSupplier" placeholder="اسم الشركة أو التاجر المجهز"></div>
         <button class="btn-save" onclick="saveItem()">حفظ المادة</button><button class="btn-cancel" onclick="closeModals()">إلغاء</button>
     </div>  
@@ -345,7 +367,7 @@
 
     <div class="modal" id="historyModal">
         <h3 class="modal-header"><span>📜 سجل الدفعات</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>
-        <div id="historyContainer" style="max-height: 300px; overflow-y: auto; margin-bottom:15px;"></div><button class="btn-cancel" onclick="closeModals()">إغلاق</button>
+        <div id="historyContainer" style="max-height: 350px; overflow-y: auto; margin-bottom:15px;"></div><button class="btn-cancel" onclick="closeModals()">إغلاق</button>
     </div>
 
     <div class="modal" id="itemHistoryModal">
@@ -361,9 +383,8 @@
         <button class="btn-save" onclick="saveEmployee()">حفظ معلومات العامل</button><button class="btn-cancel" onclick="closeModals()">إلغاء</button>
     </div>
 
-    <!-- نافذة السلفة الجديدة -->
     <div class="modal" id="empAdvanceModal">
-        <h3 class="modal-header"><span>💵 تسليم سلفة لعامل</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>
+        <h3 class="modal-header"><span>💵 تسليم السلفة لعامل</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>
         <input type="hidden" id="advanceEmpIndex" value="-1">
         <p id="advanceEmpNameDisplay" style="text-align:center; font-weight:bold; color:#0b4a8f; margin-top:0; font-size:16px;"></p>
         <div class="input-group">
@@ -391,16 +412,23 @@
     <div class="modal" id="lowStockModal">  
         <h3 class="modal-header"><span>📋 نواقص المخزن (5 أو أقل)</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>  
         <div id="lowStockContainer" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;"></div>  
-        <button class="btn-save" style="background:#25d366;" onclick="shareLowStockWhatsApp()">📤 إرسال النواقص كقائمة بالواتساب</button>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-save" style="background:#25d366; flex:1; font-size:14px;" onclick="shareLowStockWhatsApp()">📤 إرسال واتساب</button>
+            <button class="btn-save" style="background:#0b4a8f; flex:1; font-size:14px;" onclick="printLowStock()">🖨️ طباعة للسايق</button>
+        </div>
         <button class="btn-cancel" onclick="closeModals()">إغلاق</button>  
     </div>  
 
     <div class="modal" id="invoiceModal">  
         <h3 class="modal-header"><span>🧾 الوصل</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>  
+        
+        <!-- شريط التابات الجديد لتعدد الوصولات -->
+        <div id="invoiceTabsContainer"></div>
+
         <div id="invoiceInputsForm">  
             <div class="input-group" style="background: rgba(111, 66, 193, 0.05); padding: 10px; border-radius: 8px; border: 1px solid #6f42c1;">
                 <label style="color: #6f42c1;">نوع القائمة</label>
-                <select id="invoiceType" onchange="renderInvoiceDetails()">
+                <select id="invoiceType" onchange="updateTabTitle(); renderInvoiceDetails()">
                     <option value="مبيع">قائمة مبيعات (طبيعي)</option><option value="تخمين">قائمة تخمين (عرض سعر فقط)</option>
                     <option value="جملة">قائمة جملة</option><option value="راجع">قائمة إرجاع مواد (راجع)</option>
                 </select>
@@ -408,20 +436,20 @@
             <div style="display:flex; gap:10px;">
                 <div class="input-group" style="flex:1;">
                     <label>اسم الزبون</label>
-                    <input type="text" id="customerName" oninput="updatePrintInfo(); calculateTotals()" list="customersList">
+                    <input type="text" id="customerName" oninput="updatePrintInfo(); calculateTotals(); updateTabTitle()" list="customersList">
                 </div>
-                <div class="input-group" style="flex:1;"><label>منفذ العمل</label><input type="text" id="executorName" oninput="updatePrintInfo()"></div>
+                <div class="input-group" style="flex:1;"><label>منفذ العمل</label><input type="text" id="executorName" oninput="updatePrintInfo(); updateTabTitle()"></div>
             </div>  
-            <div style="display:flex; gap:10px;"><div class="input-group" style="flex:2;"><label>العنوان</label><input type="text" id="customerAddress" oninput="updatePrintInfo()"></div><div class="input-group" style="flex:1;"><label>رقم الهاتف</label><input type="tel" id="customerPhone" oninput="updatePrintInfo()"></div></div>  
+            <div style="display:flex; gap:10px;"><div class="input-group" style="flex:2;"><label>العنوان</label><input type="text" id="customerAddress" oninput="updatePrintInfo(); updateTabTitle()"></div><div class="input-group" style="flex:1;"><label>رقم الهاتف</label><input type="tel" id="customerPhone" oninput="updatePrintInfo(); updateTabTitle()"></div></div>  
             <div class="input-group" id="invoiceSearchGroup" style="position: relative; z-index: 1050; border: 2px solid #007bff; border-radius: 8px; padding: 10px; background: rgba(0,123,255,0.05);">
                 <label style="color:#007bff;">🔍 ابحث وأضف مادة للوصل</label>
                 <input type="text" id="invoiceSearchInput" placeholder="اكتب اسم المادة هنا واضغط عليها..." onkeyup="handleInvoiceSearch()" onfocus="handleInvoiceSearch()" autocomplete="off">
                 <div id="invoiceDropdown" class="search-dropdown"></div>
             </div>
             <div class="input-group" style="background:rgba(23, 162, 184, 0.05); padding:8px; border-radius:8px; border:1px dashed #17a2b8;">
-                <label style="color:#17a2b8;">🚚 أجور توصيل / عمل (تضاف للإجمالي)</label><input type="number" id="deliveryFee" value="0" oninput="calculateTotals()">
+                <label style="color:#17a2b8;">🚚 أجور توصيل / عمل (تضاف للإجمالي)</label><input type="number" id="deliveryFee" value="0" oninput="calculateTotals(); updateTabTitle()">
             </div>
-            <div style="display:flex; gap:10px;"><div class="input-group" style="flex:1;"><label style="color:#dc3545;">الخصم (اختياري)</label><input type="number" id="discountAmount" value="0" oninput="calculateTotals()"></div><div class="input-group" style="flex:1;"><label style="color:#28a745;">المبلغ الواصل</label><input type="number" id="paidAmount" oninput="calculateTotals()"></div></div>
+            <div style="display:flex; gap:10px;"><div class="input-group" style="flex:1;"><label style="color:#dc3545;">الخصم (اختياري)</label><input type="number" id="discountAmount" value="0" oninput="calculateTotals(); updateTabTitle()"></div><div class="input-group" style="flex:1;"><label style="color:#28a745;">المبلغ الواصل</label><input type="number" id="paidAmount" oninput="calculateTotals(); updateTabTitle()"></div></div>
         </div>  
         <div id="invoiceTableContainer"></div>  
         <div id="invoiceTotalsContainer" class="invoice-summary-box">
@@ -451,6 +479,8 @@
     <div class="print-only" id="statementPrintSection"></div>
     <div class="print-only" id="debtsPrintSection"></div>
     <div class="print-only" id="empPrintSection"></div>
+    <div class="print-only" id="lowStockPrintSection"></div>
+    <div class="print-only" id="receiptPrintSection"></div>
 </div>
 
 <div id="toast" class="toast">تمت العملية بنجاح!</div>  
@@ -474,8 +504,16 @@
     if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "ضع_المفتاح_هنا") { firebase.initializeApp(firebaseConfig); isCloudReady = true; }
 
     let items = []; let archive = []; let expenses = []; let suppliers = []; let inventoryLog = []; let employees = []; let suspendedInvoices = []; let currentSupImageBase64 = ""; 
-    let settings = { usdRate: 150000, accountant: "صباح", phone1: "07804884656", phone2: "07802204431", address: "الأنبار - الرمادي", logo: "https://cdn-icons-png.flaticon.com/512/2163/2163350.png" };  
+    let settings = { usdRate: 150000, accountant: "صباح", phone1: "07804884656", phone2: "07802204431", address: "الأنبار - الرمادي", logo: "https://cdn-icons-png.flaticon.com/512/2163/2163350.png", stampImage: "" };  
       
+    // نظام التابات
+    let invoiceTabs = []; 
+    let activeTabIndex = 0;
+
+    function getEmptyDraft() {
+        return { customer: "", executor: "", address: "", phone: "", type: "مبيع", discount: 0, paid: "", deliveryFee: 0, items: [] };
+    }
+
     function loginApp(role) { 
         let e = document.getElementById("authEmail").value.trim(); 
         let p = document.getElementById("authPass").value.trim(); 
@@ -548,6 +586,16 @@
         try { suspendedInvoices = JSON.parse(localStorage.getItem('mySuspendedData')) || []; updateSuspendedCount(); } catch(e){} 
         try { Object.assign(settings, JSON.parse(localStorage.getItem('mySettingsData')) || {}); initSettings(); } catch(e){}  
     }
+    
+    // استعادة تابات الوصولات من الذاكرة المحلية
+    try {
+        invoiceTabs = JSON.parse(localStorage.getItem('myInvoiceTabs')) || [];
+        if(invoiceTabs.length === 0) invoiceTabs.push(getEmptyDraft());
+        activeTabIndex = parseInt(localStorage.getItem('myActiveTabIndex')) || 0;
+        if(activeTabIndex >= invoiceTabs.length) activeTabIndex = 0;
+    } catch(e) {
+        invoiceTabs = [getEmptyDraft()]; activeTabIndex = 0;
+    }
 
     function syncCloud(node, data) { 
         if(isCloudReady && currentUser && navigator.onLine) {
@@ -589,13 +637,7 @@
             let overlay = document.getElementById("overlay");
             if(overlay) overlay.style.display = "none"; 
             ["itemName", "itemPrice", "itemCost", "itemMeasure", "itemCategory", "itemStock", "itemSupplier", "advanceAmountInput", "advanceNoteInput"].forEach(id => { let el = document.getElementById(id); if(el) el.value = ""; });
-            
-            let disc = document.getElementById("discountAmount"); if(disc) disc.value = "0";
-            let paid = document.getElementById("paidAmount"); if(paid) paid.value = "";
-            let df = document.getElementById("deliveryFee"); if(df) df.value = "0";
-            
             viewModeInvoice = null; editingIndex = -1; 
-            let invType = document.getElementById("invoiceType"); if(invType) invType.value = "مبيع";   
         }, 300);   
     }  
 
@@ -607,8 +649,40 @@
         document.getElementById('setPhone2').value = settings.phone2; 
         document.getElementById('setAddress').value = settings.address; 
         document.getElementById('setLogo').value = settings.logo; 
+        
+        if(settings.stampImage) {
+            document.getElementById('setStampPreview').src = settings.stampImage;
+            document.getElementById('setStampPreview').style.display = "block";
+        }
     }  
     
+    // رفع صورة الختم وتصغيرها
+    function handleStampUpload(event) {
+        let file = event.target.files[0];
+        if(!file) return;
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let img = new Image();
+            img.onload = function() {
+                let canvas = document.createElement("canvas");
+                let maxW = 300; // تصغير الختم لسرعة التحميل
+                let scale = maxW / img.width;
+                if(scale > 1) scale = 1;
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                let ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                settings.stampImage = canvas.toDataURL("image/png");
+                document.getElementById("setStampPreview").src = settings.stampImage;
+                document.getElementById("setStampPreview").style.display = "block";
+                saveSettings();
+                showToast("تم رفع الختم بنجاح!");
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
     function saveSettings() { 
         settings.usdRate = document.getElementById('setUsdRate').value; 
         settings.accountant = document.getElementById('setAccountant').value; 
@@ -790,7 +864,7 @@
     }
     
     function printEmpStatement(idx) {
-        document.getElementById("printSection").style.display = "none"; document.getElementById("debtsPrintSection").style.display = "none"; document.getElementById("statementPrintSection").style.display = "none";
+        document.querySelectorAll('.print-only').forEach(el => el.style.display = 'none');
         let empPrint = document.getElementById("empPrintSection"); empPrint.style.display = "block";
         let emp = employees[idx]; let remain = emp.salary - emp.advances;
         let advHistory = expenses.filter(ex => ex.name === `سلفة للعامل: ${emp.name}` || ex.name.startsWith(`سلفة للعامل: ${emp.name} - `));
@@ -802,7 +876,10 @@
         });
         if(advHistory.length === 0) { rows = `<tr><td colspan="4" style="text-align:center;">لا توجد سلف مسجلة</td></tr>`; }
 
-        let printHTML = `<div class="print-header"><div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span></div><div class="print-titles"><h1 class="main-title">فــــؤاد</h1><p class="sub-title1">للديكورات الداخلية والخارجية</p></div></div><div class="invoice-type-banner" style="background-color:#17a2b8;">كشف حساب عامل / وصل استلام</div><div class="cust-info-row"><span style="flex:1;">اسم العامل: <span class="dotted-line">${emp.name}</span></span><span>التاريخ: <span class="dotted-line">${new Date().toLocaleDateString('en-GB')}</span></span></div><table class="print-table"><thead><tr><th>ت</th><th>التاريخ</th><th>البيان (التفاصيل)</th><th class="th-total">المبلغ</th></tr></thead><tbody>${rows}</tbody></table><div class="print-summary-box" style="width:100%; margin-top:20px;"><div class="print-summary-row row-blue"><div class="print-summary-label">الراتب المقرر:</div><div class="print-summary-val">${emp.salary.toLocaleString()} د.ع</div></div><div class="print-summary-row row-red"><div class="print-summary-label" style="background-color:#dc3545 !important;">مجموع السلف المستلمة:</div><div class="print-summary-val" style="color:#dc3545;">${emp.advances.toLocaleString()} د.ع</div></div><div class="print-summary-row row-blue"><div class="print-summary-label" style="background-color:#28a745 !important;">الباقي من الراتب:</div><div class="print-summary-val" style="color:#28a745;">${remain.toLocaleString()} د.ع</div></div></div><div class="print-footer" style="margin-top:40px;"><div class="signatures" style="width:100%; display:flex; justify-content:space-around;"><div>توقيع المحاسب<br><br>.........................</div><div>توقيع العامل المستلم<br><br>.........................</div></div></div>`;
+        // إضافة الختم
+        let stampHTML = settings.stampImage ? `<br><img src="${settings.stampImage}" style="max-height:60px;">` : `<br><br>.........................`;
+
+        let printHTML = `<div class="print-header"><div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span></div><div class="print-titles"><h1 class="main-title">فــــؤاد</h1><p class="sub-title1">للديكورات الداخلية والخارجية</p></div></div><div class="invoice-type-banner" style="background-color:#17a2b8;">كشف حساب عامل / وصل استلام</div><div class="cust-info-row"><span style="flex:1;">اسم العامل: <span class="dotted-line">${emp.name}</span></span><span>التاريخ: <span class="dotted-line">${new Date().toLocaleDateString('en-GB')}</span></span></div><table class="print-table"><thead><tr><th>ت</th><th>التاريخ</th><th>البيان (التفاصيل)</th><th class="th-total">المبلغ</th></tr></thead><tbody>${rows}</tbody></table><div class="print-summary-box" style="width:100%; margin-top:20px;"><div class="print-summary-row row-blue"><div class="print-summary-label">الراتب المقرر:</div><div class="print-summary-val">${emp.salary.toLocaleString()} د.ع</div></div><div class="print-summary-row row-red"><div class="print-summary-label" style="background-color:#dc3545 !important;">مجموع السلف المستلمة:</div><div class="print-summary-val" style="color:#dc3545;">${emp.advances.toLocaleString()} د.ع</div></div><div class="print-summary-row row-blue"><div class="print-summary-label" style="background-color:#28a745 !important;">الباقي من الراتب:</div><div class="print-summary-val" style="color:#28a745;">${remain.toLocaleString()} د.ع</div></div></div><div class="print-footer" style="margin-top:40px;"><div class="signatures" style="width:100%; display:flex; justify-content:space-around; align-items:center;"><div>توقيع المحاسب / الختم${stampHTML}</div><div>توقيع العامل المستلم<br><br>.........................</div></div></div>`;
         empPrint.innerHTML = printHTML; window.print(); setTimeout(() => { empPrint.style.display = "none"; }, 1000);
     }
 
@@ -889,6 +966,93 @@
         document.getElementById("categoryStatsTable").innerHTML = catHtml;
     }
 
+    // دوال نظام تابات الوصولات
+    function saveTabsState() {
+        localStorage.setItem('myInvoiceTabs', JSON.stringify(invoiceTabs));
+        localStorage.setItem('myActiveTabIndex', activeTabIndex);
+    }
+
+    function saveCurrentToTab() {
+        if(viewModeInvoice) return;
+        invoiceTabs[activeTabIndex] = {
+            customer: document.getElementById("customerName").value,
+            executor: document.getElementById("executorName").value,
+            address: document.getElementById("customerAddress").value,
+            phone: document.getElementById("customerPhone").value,
+            type: document.getElementById("invoiceType").value,
+            discount: document.getElementById("discountAmount").value,
+            paid: document.getElementById("paidAmount").value,
+            deliveryFee: document.getElementById("deliveryFee").value,
+            items: [...currentInvoiceItems]
+        };
+        saveTabsState();
+    }
+
+    function loadTabToUI(index) {
+        activeTabIndex = index;
+        let draft = invoiceTabs[index];
+        document.getElementById("customerName").value = draft.customer || "";
+        document.getElementById("executorName").value = draft.executor || "";
+        document.getElementById("customerAddress").value = draft.address || "";
+        document.getElementById("customerPhone").value = draft.phone || "";
+        document.getElementById("invoiceType").value = draft.type || "مبيع";
+        document.getElementById("discountAmount").value = draft.discount || 0;
+        document.getElementById("paidAmount").value = draft.paid || "";
+        document.getElementById("deliveryFee").value = draft.deliveryFee || 0;
+        currentInvoiceItems = [...draft.items];
+        viewModeInvoice = null;
+        
+        saveTabsState();
+        renderInvoiceTabs();
+        renderInvoiceDetails();
+        calculateTotals();
+    }
+
+    function addNewTab() {
+        saveCurrentToTab();
+        invoiceTabs.push(getEmptyDraft());
+        loadTabToUI(invoiceTabs.length - 1);
+    }
+
+    function closeTab(index) {
+        if (invoiceTabs.length === 1) {
+            invoiceTabs[0] = getEmptyDraft();
+            loadTabToUI(0);
+        } else {
+            invoiceTabs.splice(index, 1);
+            if (activeTabIndex >= invoiceTabs.length) {
+                activeTabIndex = invoiceTabs.length - 1;
+            } else if (activeTabIndex > index) {
+                activeTabIndex--;
+            }
+            loadTabToUI(activeTabIndex);
+        }
+    }
+
+    function renderInvoiceTabs() {
+        if(viewModeInvoice) {
+            document.getElementById("invoiceTabsContainer").style.display = "none";
+            return;
+        }
+        document.getElementById("invoiceTabsContainer").style.display = "flex";
+        let html = "";
+        invoiceTabs.forEach((tab, i) => {
+            let title = tab.customer && tab.customer.trim() !== "" ? tab.customer : `وصل ${i+1}`;
+            let activeClass = i === activeTabIndex ? 'active-tab' : 'inactive-tab';
+            html += `<div class="${activeClass}" onclick="saveCurrentToTab(); loadTabToUI(${i})">
+                        📄 ${title}
+                        <span class="close-tab" onclick="event.stopPropagation(); closeTab(${i})">✖</span>
+                     </div>`;
+        });
+        html += `<button class="add-tab-btn" onclick="addNewTab()">+ وصل جديد</button>`;
+        document.getElementById("invoiceTabsContainer").innerHTML = html;
+    }
+
+    function updateTabTitle() {
+        saveCurrentToTab();
+        renderInvoiceTabs();
+    }
+
     function suspendInvoice() {
         if(currentInvoiceItems.length === 0) { alert("الوصل فارغ!"); return; }
         let obj = { 
@@ -908,6 +1072,7 @@
         localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); 
         syncCloud('suspendedInvoices', suspendedInvoices); 
         updateSuspendedCount(); 
+        closeTab(activeTabIndex); // إغلاق التاب بعد التعليق
         closeModals(); 
         showToast("⏳ تم تعليق القائمة.");
     }
@@ -934,27 +1099,34 @@
         let inv = suspendedInvoices[idx]; 
         closeModals();
         setTimeout(() => {
-            currentInvoiceItems = JSON.parse(JSON.stringify(inv.items)); 
-            viewModeInvoice = null; 
+            saveCurrentToTab();
+            
+            // إضافة المعلق كتاب جديد
+            let newDraft = {
+                customer: inv.customer === "بدون اسم" ? "" : inv.customer,
+                executor: inv.executor || "",
+                address: inv.address || "",
+                phone: inv.phone || "",
+                type: inv.type || "مبيع",
+                discount: inv.discount || 0,
+                paid: inv.paid || "",
+                deliveryFee: inv.deliveryFee || 0,
+                items: JSON.parse(JSON.stringify(inv.items))
+            };
+            
+            invoiceTabs.push(newDraft);
+            deleteSuspended(idx, true);
             
             document.getElementById("invoiceInputsForm").style.display = "block"; 
             document.getElementById("invoiceSearchGroup").style.display = "block"; 
             document.getElementById("invoiceActionButtons").children[0].style.display = "inline-block";  
             
-            document.getElementById("customerName").value = inv.customer === "بدون اسم" ? "" : inv.customer; 
-            document.getElementById("executorName").value = inv.executor || ""; 
-            document.getElementById("customerAddress").value = inv.address || ""; 
-            document.getElementById("customerPhone").value = inv.phone || ""; 
-            document.getElementById("discountAmount").value = inv.discount || "0"; 
-            document.getElementById("paidAmount").value = inv.paid || ""; 
-            document.getElementById("deliveryFee").value = inv.deliveryFee || "0"; 
-            document.getElementById("invoiceType").value = inv.type || "مبيع";
+            loadTabToUI(invoiceTabs.length - 1);
             
-            renderInvoiceDetails(); 
             document.getElementById("overlay").style.display = "block"; 
             setTimeout(() => { document.getElementById("invoiceModal").classList.add("active"); }, 10); 
-            deleteSuspended(idx, true); 
-            showToast("تم استرجاع القائمة.");
+            
+            showToast("تم استرجاع القائمة كعلامة تبويب جديدة.");
         }, 350);
     }
     
@@ -1075,7 +1247,7 @@
         if(autoPaymentsDone) showToast("💾 تم الحفظ، وتسديد الديون السابقة تلقائياً!");
         else showToast("💾 تم الحفظ والمزامنة!"); 
         
-        currentInvoiceItems = []; 
+        closeTab(activeTabIndex); // إغلاق التاب المحفوظ
         updateCustomerDropdown(); 
         renderItems(); 
         closeModals();  
@@ -1158,7 +1330,83 @@
         renderArchive(); 
     }  
     
-    function showPaymentHistory(idx) { let inv = archive[idx]; let cont = document.getElementById("historyContainer"); if(!inv.payments || inv.payments.length === 0) { cont.innerHTML = "<p style='text-align:center; padding:15px;'>لا توجد دفعات مسجلة.</p>"; } else { let html = `<table class="invoice-table-screen"><tr><th style="font-size:14px;">تاريخ الدفعة</th><th style="font-size:14px;">المبلغ المسدد</th></tr>`; inv.payments.forEach(p => { let note = p.note ? `<br><span style="font-size:10px; color:#555;">${p.note}</span>` : ''; html += `<tr><td style="font-size:15px;">${p.date}</td><td style="color:#28a745; font-weight:bold; font-size:15px;">${parseFloat(p.amount).toLocaleString()} د.ع ${note}</td></tr>`; }); html += `</table>`; cont.innerHTML = html; } document.getElementById("overlay").style.display = "block"; setTimeout(() => { document.getElementById("historyModal").classList.add("active"); }, 10); }
+    function showPaymentHistory(idx) { 
+        let inv = archive[idx]; 
+        let cont = document.getElementById("historyContainer"); 
+        if(!inv.payments || inv.payments.length === 0) { 
+            cont.innerHTML = "<p style='text-align:center; padding:15px;'>لا توجد دفعات مسجلة.</p>"; 
+        } else { 
+            let html = `<table class="invoice-table-screen"><tr><th style="font-size:14px;">تاريخ الدفعة</th><th style="font-size:14px;">المبلغ المسدد</th><th style="font-size:14px;">إجراء</th></tr>`; 
+            inv.payments.forEach((p, pIndex) => { 
+                let note = p.note ? `<br><span style="font-size:10px; color:#555;">${p.note}</span>` : ''; 
+                html += `<tr>
+                            <td style="font-size:15px;">${p.date}</td>
+                            <td style="color:#28a745; font-weight:bold; font-size:15px;">${parseFloat(p.amount).toLocaleString()} د.ع ${note}</td>
+                            <td><button class="btn-main" style="background:#17a2b8; padding:4px 8px; font-size:12px; margin:0;" onclick="printReceiptVoucher(${idx}, ${pIndex})">🖨️ طباعة</button></td>
+                        </tr>`; 
+            }); 
+            html += `</table>`; 
+            cont.innerHTML = html; 
+        } 
+        document.getElementById("overlay").style.display = "block"; 
+        setTimeout(() => { document.getElementById("historyModal").classList.add("active"); }, 10); 
+    }
+    
+    function printReceiptVoucher(archiveIdx, paymentIdx) {
+        let inv = archive[archiveIdx];
+        let payment = inv.payments[paymentIdx];
+
+        document.querySelectorAll('.print-only').forEach(el => el.style.display = 'none');
+        
+        let receiptPrint = document.getElementById("receiptPrintSection");
+        let currentRemaining = getCustomerTotalDebt(inv.customer);
+        let stampHTML = settings.stampImage ? `<br><img src="${settings.stampImage}" style="max-height:80px;">` : `<br><br>.........................`;
+
+        let printHTML = `
+            <div class="print-header">
+                <div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span></div>
+                <div class="print-titles">
+                    <h1 class="main-title">فــــؤاد</h1>
+                    <p class="sub-title1">للديكورات الداخلية والخارجية</p>
+                </div>
+            </div>
+            <div class="invoice-type-banner" style="background-color:#28a745;">سند قبض (وصل استلام)</div>
+            
+            <div style="border: 2px solid #0b4a8f; border-radius: 10px; padding: 20px; margin-top: 20px; font-size: 18px; line-height: 1.8;">
+                <div style="display:flex; justify-content:space-between; margin-bottom: 15px; border-bottom: 2px dotted #ccc; padding-bottom: 10px;">
+                    <span><strong>التاريخ:</strong> ${payment.date}</span>
+                    <span><strong>رقم الوصل الأصلي:</strong> ${inv.invNo}</span>
+                </div>
+                
+                <p style="margin: 10px 0;"><strong>استلمنا من السيد/ة:</strong> <span style="color:#0b4a8f; font-weight:bold; font-size:22px;">${inv.customer}</span></p>
+                
+                <div style="background-color: rgba(40, 167, 69, 0.1); border: 2px solid #28a745; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
+                    <span style="font-size: 20px;">مبلغاً وقدره:</span><br>
+                    <span style="font-size: 35px; color: #28a745; font-weight: bold;">${parseFloat(payment.amount).toLocaleString()} د.ع</span>
+                </div>
+                
+                <p style="margin: 10px 0;"><strong>وذلك عن:</strong> تسديد دفعة من الحساب (الديون السابقة).</p>
+                ${payment.note ? `<p style="margin: 10px 0;"><strong>ملاحظة:</strong> ${payment.note}</p>` : ''}
+                
+                <div style="display:flex; justify-content:space-between; margin-top: 20px; border-top: 2px dotted #ccc; padding-top: 15px;">
+                    <span style="color:#dc3545; font-weight:bold;">المتبقي الكلي بذمته: ${currentRemaining.toLocaleString()} د.ع</span>
+                </div>
+            </div>
+            
+            <div class="print-footer" style="margin-top:50px;">
+                <div class="signatures" style="width:100%; display:flex; justify-content:space-around; align-items:center;">
+                    <div style="text-align:center;">توقيع المستلم / الختم${stampHTML}</div>
+                    <div style="text-align:center;">توقيع الزبون<br><br>.........................</div>
+                </div>
+            </div>
+        `;
+
+        receiptPrint.innerHTML = printHTML;
+        receiptPrint.style.display = "block";
+        window.print();
+        setTimeout(() => { receiptPrint.style.display = "none"; }, 1000);
+    }
+
     function remindDebt(idx) { let inv = archive[idx]; let text = `مرحباً الأخ العزيز ${inv.customer}،\nللتذكير: يرجى تسديد المبلغ المتبقي لقائمة فؤاد الچليباوي\nالبالغ: *${parseFloat(inv.remaining).toLocaleString()} د.ع*\nشكراً جزيلاً.`; window.location.href = "whatsapp://send?text=" + encodeURIComponent(text); }
 
     function renderStatement() {
@@ -1185,6 +1433,8 @@
         cont.innerHTML = `<h3 style="color:#0b4a8f; text-align:center; border-bottom:1px solid #ddd; padding-bottom:10px;">كشف حساب: ${cust}</h3>` + tableHTML + summary; 
         cont.style.display = "block"; btn.style.display = "block";
         
+        let stampHTML = settings.stampImage ? `<br><img src="${settings.stampImage}" style="max-height:60px;">` : `<br><br>.........................`;
+
         let printHTML = `<div class="print-header"><div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span></div><div class="print-titles"><h1 class="main-title">فــــؤاد</h1><p class="sub-title1">للديكورات الداخلية والخارجية</p></div></div><div class="invoice-type-banner" style="background-color:#0b4a8f;">كشف حساب زبون تفصيلي</div><div class="cust-info-row"><span style="flex:1;">اسم الزبون : <span class="dotted-line">${cust}</span></span><span>التاريخ : <span class="dotted-line">${new Date().toLocaleDateString('en-GB')}</span></span></div><table class="print-table"><thead><tr><th>التاريخ</th><th>رقم القائمة</th><th>إجمالي القائمة</th><th>المبلغ الواصل</th><th class="th-total">المتبقي</th></tr></thead><tbody>`;
         sortedRecs.forEach(r => {
             let t = parseFloat(r.total)||0; let p = parseFloat(r.paid)||0; let m = parseFloat(r.remaining)||0;
@@ -1192,7 +1442,7 @@
             let tType = r.type === 'راجع' ? '(راجع)' : '';
             printHTML += `<tr><td>${r.date}</td><td>${r.invNo} ${tType}</td><td>${t.toLocaleString()}</td><td>${p.toLocaleString()}</td><td style="color:#dc3545;">${m.toLocaleString()}</td></tr>`;
         });
-        printHTML += `</tbody></table><div class="print-summary-box" style="width:100%; margin-top:20px;"><div class="print-summary-row row-blue"><div class="print-summary-label">إجمالي المسحوبات:</div><div class="print-summary-val">${totalBought.toLocaleString()} د.ع</div></div><div class="print-summary-row row-blue"><div class="print-summary-label">إجمالي التسديدات:</div><div class="print-summary-val">${totalPaid.toLocaleString()} د.ع</div></div><div class="print-summary-row row-red"><div class="print-summary-label">الديون المتبقية بذمته:</div><div class="print-summary-val">${totalRem.toLocaleString()} د.ع</div></div></div>`;
+        printHTML += `</tbody></table><div class="print-summary-box" style="width:100%; margin-top:20px;"><div class="print-summary-row row-blue"><div class="print-summary-label">إجمالي المسحوبات:</div><div class="print-summary-val">${totalBought.toLocaleString()} د.ع</div></div><div class="print-summary-row row-blue"><div class="print-summary-label">إجمالي التسديدات:</div><div class="print-summary-val">${totalPaid.toLocaleString()} د.ع</div></div><div class="print-summary-row row-red"><div class="print-summary-label">الديون المتبقية بذمته:</div><div class="print-summary-val">${totalRem.toLocaleString()} د.ع</div></div></div><div class="print-footer"><div class="signatures" style="width:100%; display:flex; justify-content:space-around; align-items:center;"><div>توقيع المحاسب / الختم${stampHTML}</div><div>توقيع الزبون المستلم<br><br>.........................</div></div></div>`;
         
         document.getElementById("statementPrintSection").innerHTML = printHTML;
     }
@@ -1212,10 +1462,7 @@
     }
 
     function printStatement() { 
-        document.getElementById("printSection").style.display = "none"; 
-        document.getElementById("debtsPrintSection").style.display = "none"; 
-        let ep=document.getElementById("empPrintSection"); if(ep)ep.style.display="none"; 
-        
+        document.querySelectorAll('.print-only').forEach(el => el.style.display = 'none');
         document.getElementById("statementPrintSection").style.display = "block"; 
         window.print(); 
         setTimeout(() => { document.getElementById("statementPrintSection").style.display = "none"; }, 1000); 
@@ -1224,7 +1471,8 @@
     function printCrm() { printAllDebts(); } 
     
     function printAllDebts() {
-        document.getElementById("printSection").style.display = "none"; document.getElementById("statementPrintSection").style.display = "none"; let ep=document.getElementById("empPrintSection"); if(ep)ep.style.display="none";
+        document.querySelectorAll('.print-only').forEach(el => el.style.display = 'none');
+        
         let debtsPrint = document.getElementById("debtsPrintSection"); let totalDebts = 0; let rows = ''; let counter = 1;
         
         let customersData = {};
@@ -1243,27 +1491,24 @@
         }
         
         if(totalDebts === 0) { alert("لا توجد ديون للطباعة!"); return; }
-        let printHTML = `<div class="print-header"><div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span></div><div class="print-titles"><h1 class="main-title">فــــؤاد</h1><p class="sub-title1">للديكورات الداخلية والخارجية</p></div></div><div class="invoice-type-banner" style="background-color:#17a2b8;">كشف الديون الكلية (المطلوبين)</div><div class="cust-info-row"><span style="flex:1;">تاريخ الطباعة: <span class="dotted-line">${new Date().toLocaleDateString('en-GB')}</span></span></div><table class="print-table"><thead><tr><th>ت</th><th>اسم الزبون</th><th>رقم الهاتف</th><th>ملاحظة</th><th class="th-total">المبلغ المتبقي بذمته</th></tr></thead><tbody>${rows}</tbody></table><div style="margin-top:20px; font-size:20px; font-weight:bold; color:#dc3545; text-align:center; border:2px solid #dc3545; padding:10px; border-radius:8px;">إجمالي أموال الديون في السوق: ${totalDebts.toLocaleString()} د.ع</div>`;
+        
+        let stampHTML = settings.stampImage ? `<br><img src="${settings.stampImage}" style="max-height:60px;">` : `<br><br>.........................`;
+        
+        let printHTML = `<div class="print-header"><div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span></div><div class="print-titles"><h1 class="main-title">فــــؤاد</h1><p class="sub-title1">للديكورات الداخلية والخارجية</p></div></div><div class="invoice-type-banner" style="background-color:#17a2b8;">كشف الديون الكلية (المطلوبين)</div><div class="cust-info-row"><span style="flex:1;">تاريخ الطباعة: <span class="dotted-line">${new Date().toLocaleDateString('en-GB')}</span></span></div><table class="print-table"><thead><tr><th>ت</th><th>اسم الزبون</th><th>رقم الهاتف</th><th>ملاحظة</th><th class="th-total">المبلغ المتبقي بذمته</th></tr></thead><tbody>${rows}</tbody></table><div style="margin-top:20px; font-size:20px; font-weight:bold; color:#dc3545; text-align:center; border:2px solid #dc3545; padding:10px; border-radius:8px;">إجمالي أموال الديون في السوق: ${totalDebts.toLocaleString()} د.ع</div><div class="print-footer"><div class="signatures" style="width:100%; display:flex; justify-content:space-around; align-items:center;"><div>توقيع المحاسب / الختم${stampHTML}</div></div></div>`;
         debtsPrint.innerHTML = printHTML; debtsPrint.style.display = "block"; window.print(); setTimeout(() => { debtsPrint.style.display = "none"; }, 1000);
     }
 
     function openNewInvoiceModal() {
-        currentInvoiceItems = []; viewModeInvoice = null; 
+        viewModeInvoice = null; 
         document.getElementById("invoiceInputsForm").style.display = "block"; 
         document.getElementById("invoiceSearchGroup").style.display = "block"; 
         document.getElementById("invoiceActionButtons").children[0].style.display = "inline-block";  
         
-        document.getElementById("customerName").value = ""; 
-        document.getElementById("executorName").value = ""; 
-        document.getElementById("customerAddress").value = ""; 
-        document.getElementById("customerPhone").value = ""; 
-        document.getElementById("discountAmount").value = "0"; 
-        document.getElementById("paidAmount").value = "0"; 
-        let df = document.getElementById("deliveryFee"); if(df) df.value = "0";
-        
+        loadTabToUI(activeTabIndex); // يحمل التاب النشط اللي كان مفتوح
+
         document.getElementById("invoiceSearchInput").value = ""; 
         document.getElementById("invoiceDropdown").style.display = "none"; 
-        renderInvoiceDetails();  
+        
         document.getElementById("overlay").style.display = "block"; 
         setTimeout(() => { document.getElementById("invoiceModal").classList.add("active"); }, 10);
     }
@@ -1328,13 +1573,12 @@
         currentInvoiceItems.forEach(itm => { total += (parseFloat(itm.price) || 0) * (parseFloat(itm.qty) || 0); }); 
         currentInvoiceTotal = total; 
         calculateTotals(); 
+        saveCurrentToTab();
     }
 
     function renderInvoiceDetails() {  
         let activeId = document.activeElement ? document.activeElement.id : null; 
-        document.getElementById("statementPrintSection").style.display = "none"; 
-        document.getElementById("debtsPrintSection").style.display = "none"; 
-        let ep = document.getElementById("empPrintSection"); if(ep) ep.style.display = "none";
+        document.querySelectorAll('.print-only').forEach(el => el.style.display = 'none');
         document.getElementById("printSection").style.display = "block";
         
         let total = 0; let counter = 1; 
@@ -1442,7 +1686,10 @@
         let deliveryPrintRow = deliveryFee > 0 ? `<div class="print-summary-row row-blue"><div class="print-summary-label" style="background-color:#17a2b8 !important;">أجور النقل والعمل:</div><div class="print-summary-val" style="color:#17a2b8;">${deliveryFee.toLocaleString()} د.ع</div></div>` : '';
         let displayTotalText = usdRate > 0 ? `${netTotal.toLocaleString()} د.ع (≈ $${netTotalUsd})` : `${netTotal.toLocaleString()} د.ع`;
         
-        let printHTML = `<div class="print-header"><div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span>${settings.phone2 ? `<span class="phone-badge">${settings.phone2} 📱</span>` : ''}</div><div class="print-titles"><h1 class="main-title">فــــؤاد</h1><p class="sub-title1">للديكورات الداخلية والخارجية وبيع البورسلان</p><p class="sub-title2">المرمر وحجر التغليف السوري والحلاني والثرمستون والفوم والماده اللاصقه والگرانيت</p></div></div>${printBanner}<div class="address-bar"><span class="address-text">📍 ${settings.address}</span><span class="accountant-box">المحاسب/المجهز : ${settings.accountant}</span></div><div class="cust-info-row"><span>التــاريــخ : <span class="dotted-line" style="min-width:100px;">${invDate}</span></span><span style="color:#c82333;">№ ${invNo}</span></div><div class="cust-info-row"><span style="flex:1;">اسم الزبون : <span class="dotted-line" id="printCustName">${custName}</span></span><span style="flex:1;">منفذ العمل : <span class="dotted-line" id="printExecName">${execName}</span></span></div><div class="cust-info-row"><span style="flex:2;">العنــــوان : <span class="dotted-line" id="printCustAddress">${custAddr}</span></span><span style="flex:1;">رقم الها : <span class="dotted-line" id="printCustPhone">${custPhone}</span></span></div><table class="print-table"><thead><tr><th>ت</th><th>التفاصيل (البيان)</th><th>العدد</th><th>الوحدة</th><th>السعر</th><th class="th-total">الإجمالي</th></tr></thead><tbody>${printRows}</tbody></table><div style="margin-top: 12px; font-size: 14px; font-weight: bold; text-align: center; border: 2px dashed #dc3545; padding: 8px; border-radius: 6px; color: #dc3545; background-color: rgba(220, 53, 69, 0.02);">⚠️ شروط المحل: البضاعة لا تسترد ولا تبدل بعد التلف</div><div class="print-footer"><div class="signatures"><div>التوقيع : .........................</div></div><div class="print-summary-box">${deliveryPrintRow}${discountPrintRow}<div class="print-summary-row row-blue"><div class="print-summary-label">مجموع قائمة اليوم:</div><div class="print-summary-val">${displayTotalText}</div></div>`;
+        // جلب الختم من الإعدادات للطباعة
+        let stampHTML = settings.stampImage ? `<br><img src="${settings.stampImage}" style="max-height:80px; margin-top:5px; opacity:0.9;">` : `<br><br>.........................`;
+
+        let printHTML = `<div class="print-header"><div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span>${settings.phone2 ? `<span class="phone-badge">${settings.phone2} 📱</span>` : ''}</div><div class="print-titles"><h1 class="main-title">فــــؤاد</h1><p class="sub-title1">للديكورات الداخلية والخارجية وبيع البورسلان</p><p class="sub-title2">المرمر وحجر التغليف السوري والحلاني والثرمستون والفوم والماده اللاصقه والگرانيت</p></div></div>${printBanner}<div class="address-bar"><span class="address-text">📍 ${settings.address}</span><span class="accountant-box">المحاسب/المجهز : ${settings.accountant}</span></div><div class="cust-info-row"><span>التــاريــخ : <span class="dotted-line" style="min-width:100px;">${invDate}</span></span><span style="color:#c82333;">№ ${invNo}</span></div><div class="cust-info-row"><span style="flex:1;">اسم الزبون : <span class="dotted-line" id="printCustName">${custName}</span></span><span style="flex:1;">منفذ العمل : <span class="dotted-line" id="printExecName">${execName}</span></span></div><div class="cust-info-row"><span style="flex:2;">العنــــوان : <span class="dotted-line" id="printCustAddress">${custAddr}</span></span><span style="flex:1;">رقم الها : <span class="dotted-line" id="printCustPhone">${custPhone}</span></span></div><table class="print-table"><thead><tr><th>ت</th><th>التفاصيل (البيان)</th><th>العدد</th><th>الوحدة</th><th>السعر</th><th class="th-total">الإجمالي</th></tr></thead><tbody>${printRows}</tbody></table><div style="margin-top: 12px; font-size: 14px; font-weight: bold; text-align: center; border: 2px dashed #dc3545; padding: 8px; border-radius: 6px; color: #dc3545; background-color: rgba(220, 53, 69, 0.02);">⚠️ شروط المحل: البضاعة لا تسترد ولا تبدل بعد التلف</div><div class="print-footer"><div class="signatures"><div style="text-align:center;">التوقيع / الختم : ${stampHTML}</div></div><div class="print-summary-box">${deliveryPrintRow}${discountPrintRow}<div class="print-summary-row row-blue"><div class="print-summary-label">مجموع قائمة اليوم:</div><div class="print-summary-val">${displayTotalText}</div></div>`;
         
         if (prevDebt !== 0) {
             printHTML += `<div class="print-summary-row" style="background:#fff3cd;"><div class="print-summary-label" style="background:#ffc107 !important; color:#000 !important;">ديون سابقة بذمته:</div><div class="print-summary-val" style="color:#856404; font-weight:bold;">${prevDebt.toLocaleString()} د.ع</div></div>`;
@@ -1500,7 +1747,7 @@
 
     function updatePrintInfo() { if(document.getElementById("printCustName")) document.getElementById("printCustName").innerText = document.getElementById("customerName").value; if(document.getElementById("printExecName")) document.getElementById("printExecName").innerText = document.getElementById("executorName").value; if(document.getElementById("printCustAddress")) document.getElementById("printCustAddress").innerText = document.getElementById("customerAddress").value; if(document.getElementById("printCustPhone")) document.getElementById("printCustPhone").innerText = document.getElementById("customerPhone").value; }  
     
-    function viewArchiveInvoice(index) { viewModeInvoice = archive[index]; document.getElementById("invoiceInputsForm").style.display = "none"; document.getElementById("invoiceSearchGroup").style.display = "none"; document.getElementById("invoiceActionButtons").children[0].style.display = "none"; renderInvoiceDetails(); document.getElementById("overlay").style.display = "block"; setTimeout(() => { document.getElementById("invoiceModal").classList.add("active"); }, 10); }  
+    function viewArchiveInvoice(index) { viewModeInvoice = archive[index]; document.getElementById("invoiceInputsForm").style.display = "none"; document.getElementById("invoiceSearchGroup").style.display = "none"; document.getElementById("invoiceActionButtons").children[0].style.display = "none"; renderInvoiceDetails(); renderInvoiceTabs(); document.getElementById("overlay").style.display = "block"; setTimeout(() => { document.getElementById("invoiceModal").classList.add("active"); }, 10); }  
     
     function returnItemFromArchive(itemIdx) {
         let inv = viewModeInvoice; if(!inv) return; let itm = inv.items[itemIdx]; let currentQty = parseFloat(itm.qty) || 0; if(currentQty <= 0) { alert("تم استرجاعها سابقاً!"); return; }
@@ -1557,6 +1804,49 @@
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(text);
     }
     
+    function printLowStock() {
+        let lowItems = items.filter(i => i.stock !== undefined && i.stock !== "" && parseFloat(i.stock) <= 5);
+        if(lowItems.length === 0) { alert("لا توجد نواقص للطباعة!"); return; }
+        
+        document.querySelectorAll('.print-only').forEach(el => el.style.display = 'none');
+        
+        let lsPrint = document.getElementById("lowStockPrintSection");
+        if(!lsPrint) return;
+        
+        let rows = ''; let counter = 1;
+        lowItems.forEach(i => {
+            let supStr = i.supplier ? i.supplier : '-';
+            rows += `<tr><td>${counter++}</td><td>${i.name}</td><td>${i.category || 'عام'}</td><td style="color:#dc3545; font-weight:bold;">${i.stock}</td><td>${supStr}</td></tr>`;
+        });
+        
+        let printHTML = `
+            <div class="print-header">
+                <div class="print-titles">
+                    <h1 class="main-title">فــــؤاد</h1>
+                    <p class="sub-title1">للديكورات الداخلية والخارجية</p>
+                </div>
+            </div>
+            <div class="invoice-type-banner" style="background-color:#dc3545;">قائمة نواقص المخزن (طلب تجهيز بضاعة)</div>
+            <div class="cust-info-row">
+                <span style="flex:1;">تاريخ الطباعة: <span class="dotted-line">${new Date().toLocaleDateString('en-GB')}</span></span>
+            </div>
+            <table class="print-table">
+                <thead>
+                    <tr><th>ت</th><th>اسم المادة</th><th>القسم</th><th class="th-total">المتبقي بالمخزن</th><th>المجهز / الشركة</th></tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <div style="margin-top:20px; font-size:16px; font-weight:bold; text-align:center;">
+                الرجاء تجهيز المواد المذكورة أعلاه.
+            </div>
+        `;
+        
+        lsPrint.innerHTML = printHTML;
+        lsPrint.style.display = "block";
+        window.print();
+        setTimeout(() => { lsPrint.style.display = "none"; }, 1000);
+    }
+    
     function showLowStockAlerts() { 
         let lowItems = items.filter(i => i.stock !== undefined && i.stock !== "" && parseFloat(i.stock) <= 5); 
         let cont = document.getElementById("lowStockContainer"); 
@@ -1579,9 +1869,43 @@
     function shareLowStockWhatsApp() { let lowItems = items.filter(i => i.stock !== undefined && i.stock !== "" && parseFloat(i.stock) <= 5); if(lowItems.length === 0) { alert("لا توجد نواقص!"); return; } let text = "📋 *قائمة نواقص المواد المطلوبة*\n━━━━━━━━━━━━━━━━━\n"; lowItems.forEach(i => { text += `🔸 *${i.name}* -> المتبقي: [ ${i.stock} ]\n`; }); text += "━━━━━━━━━━━━━━━━━\nيرجى التجهيز."; window.location.href = "whatsapp://send?text=" + encodeURIComponent(text); }
     
     function exportExcel() { if(archive.length === 0) { alert("الأرشيف فارغ!"); return; } let csv = '\uFEFF'; csv += "رقم الوصل,التاريخ,نوع القائمة,الزبون,رقم الهاتف,منفذ العمل,المجموع الكلي,الخصم الممنوح,المبلغ الواصل,الديون المتبقية\n"; archive.forEach(inv => { let total = parseFloat(inv.total) || 0; let sub = parseFloat(inv.subTotal) || total; let disc = parseFloat(inv.discount) || 0; let paid = parseFloat(inv.paid) || 0; let rem = parseFloat(inv.remaining) || 0; let cleanCust = (inv.customer || '').replace(/,/g, ' '); let cleanExec = (inv.executor || '').replace(/,/g, ' '); csv += `${inv.invNo},${inv.date},${inv.type||'مبيع'},${cleanCust},${inv.phone||''},${cleanExec},${sub},${disc},${paid},${rem}\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); const url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", `ارشيف_الوصولات.csv`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast("تم تصدير ملف الإكسل!"); }
+    
     function exportBackup() { let allData = { items, archive, expenses, suppliers, inventoryLog, employees, suspendedInvoices, settings }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData)); const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "Aljelibawi_Full_Backup.json"); dl.click(); showToast("تم الحفظ الشامل!"); }  
+    
     function importBackup(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const imp = JSON.parse(e.target.result); if(Array.isArray(imp)) { items = imp; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } else { if(imp.items) { items = imp.items; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } if(imp.archive) { archive = imp.archive; localStorage.setItem('myArchiveData', JSON.stringify(archive)); syncCloud('archive', archive); } if(imp.expenses) { expenses = imp.expenses; localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses); } if(imp.suppliers) { suppliers = imp.suppliers; localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); syncCloud('suppliers', suppliers); } if(imp.inventoryLog) { inventoryLog = imp.inventoryLog; localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); syncCloud('inventoryLog', inventoryLog); } if(imp.employees) { employees = imp.employees; localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); } if(imp.suspendedInvoices) { suspendedInvoices = imp.suspendedInvoices; localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); syncCloud('suspendedInvoices', suspendedInvoices); updateSuspendedCount(); } if(imp.settings) { settings = imp.settings; localStorage.setItem('mySettingsData', JSON.stringify(settings)); syncCloud('settings', settings); initSettings();} } renderItems(); updateCustomerDropdown(); showToast("تم الاسترجاع!"); } catch (err) { alert("ملف غير صالح!"); } }; reader.readAsText(file); event.target.value = ''; }  
     
+    function annualArchiving() {
+        if(currentRole !== 'admin') { alert("هذه الصلاحية للمدير فقط!"); return; }
+        
+        let confirmMsg = "⚠️ تنبيه هام جداً ⚠️\n\nهذه العملية ستقوم بحذف جميع (الوصولات المسددة بالكامل) وقوائم التخمين القديمة لتخفيف السيرفر وتسريع النظام.\n\n* سيتم الاحتفاظ بجميع (الديون).\n* سيتم تنزيل نسخة احتياطية شاملة تلقائياً قبل الحذف للرجوع لها وقت الحاجة.\n\nهل أنت متأكد من بدء التصفية؟";
+        
+        if(!confirm(confirmMsg)) return;
+
+        exportBackup(); 
+
+        setTimeout(() => {
+            let newArchive = archive.filter(inv => {
+                let rem = parseFloat(inv.remaining) || 0;
+                return Math.abs(rem) > 0; 
+            });
+
+            let newInventoryLog = inventoryLog.slice(0, 100);
+
+            archive = newArchive;
+            inventoryLog = newInventoryLog;
+
+            localStorage.setItem('myArchiveData', JSON.stringify(archive));
+            syncCloud('archive', archive);
+            
+            localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog));
+            syncCloud('inventoryLog', inventoryLog);
+
+            showToast("🧹 تم تصفية النظام بنجاح! التطبيق الآن أسرع.");
+            renderArchive();
+            renderDebts();
+        }, 1500);
+    }
+
     function dailyClosing() { 
         let today = new Date().toLocaleDateString('en-GB'); 
         let tSales = 0, tPaid = 0, tExp = 0, tSupPaid = 0; 
