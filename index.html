@@ -640,8 +640,17 @@
     const firebaseConfig = { apiKey: "AIzaSyA0zWULcZLJa2RjTzwwdOCDwci7vi4SL2w", authDomain: "fouadstorenew.firebaseapp.com", databaseURL: "https://fouadstorenew-default-rtdb.firebaseio.com", projectId: "fouadstorenew", storageBucket: "fouadstorenew.firebasestorage.app", messagingSenderId: "355098496639", appId: "1:355098496639:web:a1d2d1f3ac78b80e44b94a" };
     let isCloudReady = false; let currentUser = null; let currentRole = localStorage.getItem('appRole') || 'admin';
     
-    window.addEventListener('offline', () => { let el = document.getElementById('networkStatus'); if(el) { el.innerHTML = '🔴 غير متصل'; el.style.background = '#dc3545'; } showToast("أنت تعمل بدون إنترنت (Offline)."); });
-    window.addEventListener('online', () => { let el = document.getElementById('networkStatus'); if(el) { el.innerHTML = '🟢 متصل'; el.style.background = '#28a745'; } showToast("تمت استعادة الاتصال. جاري المزامنة..."); if(currentUser) syncAllToCloud(); });
+    window.addEventListener('offline', () => { 
+        let el = document.getElementById('networkStatus'); 
+        if(el) { el.innerHTML = '🟠 يعمل محلياً (Offline)'; el.style.background = '#fd7e14'; } 
+        showToast("⚠️ انقطع الإنترنت! تم تفعيل وضع الطوارئ المحلي (تستطيع البيع وحفظ البيانات محلياً)."); 
+    });
+    window.addEventListener('online', () => { 
+        let el = document.getElementById('networkStatus'); 
+        if(el) { el.innerHTML = '🟢 متصل'; el.style.background = '#28a745'; } 
+        showToast("✅ عاد الاتصال! جاري مزامنة البيانات المحلية مع السحابة..."); 
+        if(currentUser) syncAllToCloud(); 
+    });
     
     if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "ضع_المفتاح_هنا") { firebase.initializeApp(firebaseConfig); isCloudReady = true; }
 
@@ -669,7 +678,22 @@
 
         localStorage.setItem('appRole', role); 
         currentRole = role; 
-        firebase.auth().signInWithEmailAndPassword(e, p).catch(err => alert("خطأ: " + err.message)); 
+        if(navigator.onLine && isCloudReady) {
+            firebase.auth().signInWithEmailAndPassword(e, p).catch(err => {
+                alert("خطأ سحابي: " + err.message + "\nتم الدخول بالوضع المحلي للاستمرار.");
+                enterAppOfflineMode();
+            }); 
+        } else {
+            enterAppOfflineMode();
+        }
+    }
+
+    function enterAppOfflineMode() {
+        document.getElementById('auth-screen').style.display = 'none'; 
+        document.getElementById('main-app').style.display = 'block'; 
+        loadLocalVaultData();
+        applyRoleRestrictions();
+        showToast("⚠️ يعمل بوضع الطوارئ المحلي بدون إنترنت.");
     }
     
     function registerApp() { 
@@ -677,12 +701,18 @@
         let p = document.getElementById("authPass").value.trim(); 
         if(!e || !p) return; 
         if(p.length < 6) { alert("الرمز قصير!"); return; } 
-        firebase.auth().createUserWithEmailAndPassword(e, p).then(() => { alert("تم إنشاء الحساب بنجاح!"); }).catch(err => alert(err.message)); 
+        if(navigator.onLine && isCloudReady) {
+            firebase.auth().createUserWithEmailAndPassword(e, p).then(() => { alert("تم إنشاء الحساب بنجاح!"); }).catch(err => alert(err.message)); 
+        } else {
+            alert("لا يمكن إنشاء حساب جديد بدون إنترنت.");
+        }
     }
     
     function logoutApp() { 
         if(confirm("تأكيد تسجيل الخروج؟")) { 
-            firebase.auth().signOut().then(() => { localStorage.clear(); window.location.reload(); }); 
+            if(isCloudReady) firebase.auth().signOut();
+            localStorage.clear(); 
+            window.location.reload(); 
         } 
     }
 
@@ -745,6 +775,17 @@
         renderExpenses();
     }
 
+    function loadLocalVaultData() {
+        try { items = JSON.parse(localStorage.getItem('myPricesData')) || []; } catch(e){}  
+        try { archive = JSON.parse(localStorage.getItem('myArchiveData')) || []; } catch(e){}  
+        try { expenses = JSON.parse(localStorage.getItem('myExpensesData')) || []; } catch(e){}  
+        try { suppliers = JSON.parse(localStorage.getItem('mySuppliersData')) || []; } catch(e){}  
+        try { inventoryLog = JSON.parse(localStorage.getItem('myInventoryLog')) || []; } catch(e){} 
+        try { employees = JSON.parse(localStorage.getItem('myEmployeesData')) || []; } catch(e){} 
+        try { suspendedInvoices = JSON.parse(localStorage.getItem('mySuspendedData')) || []; updateSuspendedCount(); } catch(e){} 
+        try { Object.assign(settings, JSON.parse(localStorage.getItem('mySettingsData')) || {}); initSettings(); } catch(e){}  
+    }
+
     if(isCloudReady) {
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
@@ -765,24 +806,21 @@
                 uRef.child('suspendedInvoices').on('value', s => { if(s.exists()){ suspendedInvoices = s.val(); localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); updateSuspendedCount(); } }); 
                 uRef.child('settings').on('value', s => { if(s.exists()){ let d = s.val(); Object.assign(settings, d); localStorage.setItem('mySettingsData', JSON.stringify(settings)); initSettings(); } });
                 
-                showToast("تم تسجيل الدخول والمزامنة!");
+                showToast("تم تسجيل الدخول والمزامنة السحابية!");
             } else { 
                 currentUser = null; 
-                document.getElementById('auth-screen').style.display = 'flex'; 
-                document.getElementById('main-app').style.display = 'none'; 
+                if(!navigator.onLine) {
+                    enterAppOfflineMode();
+                } else {
+                    document.getElementById('auth-screen').style.display = 'flex'; 
+                    document.getElementById('main-app').style.display = 'none'; 
+                }
             }
         });
     } else {
         document.getElementById('auth-screen').style.display = 'none'; 
         document.getElementById('main-app').style.display = 'block'; 
-        try { items = JSON.parse(localStorage.getItem('myPricesData')) || []; } catch(e){}  
-        try { archive = JSON.parse(localStorage.getItem('myArchiveData')) || []; } catch(e){}  
-        try { expenses = JSON.parse(localStorage.getItem('myExpensesData')) || []; } catch(e){}  
-        try { suppliers = JSON.parse(localStorage.getItem('mySuppliersData')) || []; } catch(e){}  
-        try { inventoryLog = JSON.parse(localStorage.getItem('myInventoryLog')) || []; } catch(e){} 
-        try { employees = JSON.parse(localStorage.getItem('myEmployeesData')) || []; } catch(e){} 
-        try { suspendedInvoices = JSON.parse(localStorage.getItem('mySuspendedData')) || []; updateSuspendedCount(); } catch(e){} 
-        try { Object.assign(settings, JSON.parse(localStorage.getItem('mySettingsData')) || {}); initSettings(); } catch(e){}  
+        loadLocalVaultData();
         applyRoleRestrictions();
     }
     
@@ -893,7 +931,7 @@
         localStorage.setItem('mySettingsData', JSON.stringify(settings)); 
         syncCloud('settings', settings); 
         initSettings(); 
-        showToast("تم حفظ الإعدادات!"); 
+        showToast("تم حفظ الإعدادات محلياً وسحابياً!"); 
     }  
     
     function toggleTheme() { 
@@ -1563,7 +1601,7 @@
 
             localStorage.setItem('myArchiveData', JSON.stringify(archive)); 
             syncCloud('archive', archive); 
-            showToast("✅ تم حفظ التعديلات على الوصل بنجاح!");
+            showToast("✅ تم حفظ التعديلات على الوصل بنجاح محلياً وسحابياً!");
 
             closeTab(activeTabIndex); 
             updateCustomerDropdown(); 
@@ -1615,8 +1653,8 @@
         localStorage.setItem('myArchiveData', JSON.stringify(archive)); 
         syncCloud('archive', archive); 
         
-        if(autoPaymentsDone) showToast("💾 تم الحفظ، وتسديد الديون السابقة تلقائياً!");
-        else showToast("💾 تم الحفظ والمزامنة!"); 
+        if(autoPaymentsDone) showToast("💾 تم الحفظ بوضع الطوارئ، وتسديد الديون السابقة تلقائياً!");
+        else showToast("💾 تم الحفظ بنجاح!"); 
         
         closeTab(activeTabIndex); 
         updateCustomerDropdown(); 
@@ -1904,7 +1942,7 @@
         localStorage.setItem('myArchiveData', JSON.stringify(archive)); 
         syncCloud('archive', archive); 
         closeModals(); 
-        showToast("✅ تم تسديد الدفعة بنجاح!"); 
+        showToast("✅ تم تسديد الدفعة بنجاح ومحلياً!"); 
         renderDebts(); 
         renderArchive(); 
         if(document.getElementById("view-statement").classList.contains("active")) renderStatement();
@@ -2073,7 +2111,7 @@
         localStorage.setItem('myArchiveData', JSON.stringify(archive));
         syncCloud('archive', archive);
         closeModals();
-        showToast("✅ تم تسديد القوائم وحفظ الدفعة بنجاح!");
+        showToast("✅ تم تسديد القوائم وحفظ الدفعة بنجاح محلياً وسحابياً!");
         renderDebts();
         renderArchive();
         if(document.getElementById("view-statement").classList.contains("active")) renderStatement();
@@ -2669,9 +2707,9 @@
     
     function exportExcel() { if(archive.length === 0) { alert("الأرشيف فارغ!"); return; } let csv = '\uFEFF'; csv += "رقم الوصل,التاريخ,نوع القائمة,الزبون,رقم الهاتف,منفذ العمل,المجموع الكلي,الخصم الممنوح,المبلغ الواصل,الديون المتبقية\n"; archive.forEach(inv => { let total = parseFloat(inv.total) || 0; let sub = parseFloat(inv.subTotal) || total; let disc = parseFloat(inv.discount) || 0; let paid = parseFloat(inv.paid) || 0; let rem = parseFloat(inv.remaining) || 0; let cleanCust = (inv.customer || '').replace(/,/g, ' '); let cleanExec = (inv.executor || '').replace(/,/g, ' '); csv += `${inv.invNo},${inv.date},${inv.type||'مبيع'},${cleanCust},${inv.phone||''},${cleanExec},${sub},${disc},${paid},${rem}\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); const url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", `ارشيف_الوصولات.csv`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast("تم تصدير ملف الإكسل!"); }
     
-    function exportBackup() { let allData = { items, archive, expenses, suppliers, inventoryLog, employees, suspendedInvoices, settings }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData)); const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "Aljelibawi_Full_Backup.json"); dl.click(); showToast("تم الحفظ الشامل!"); }  
+    function exportBackup() { let allData = { items, archive, expenses, suppliers, inventoryLog, employees, suspendedInvoices, settings }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData)); const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "Aljelibawi_Full_Backup.json"); dl.click(); showToast("تم الحفظ الشامل محلياً!"); }  
     
-    function importBackup(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const imp = JSON.parse(e.target.result); if(Array.isArray(imp)) { items = imp; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } else { if(imp.items) { items = imp.items; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } if(imp.archive) { archive = imp.archive; localStorage.setItem('myArchiveData', JSON.stringify(archive)); syncCloud('archive', archive); } if(imp.expenses) { expenses = imp.expenses; localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses); } if(imp.suppliers) { suppliers = imp.suppliers; localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); syncCloud('suppliers', suppliers); } if(imp.inventoryLog) { inventoryLog = imp.inventoryLog; localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); syncCloud('inventoryLog', inventoryLog); } if(imp.employees) { employees = imp.employees; localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); } if(imp.suspendedInvoices) { suspendedInvoices = imp.suspendedInvoices; localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); syncCloud('suspendedInvoices', suspendedInvoices); updateSuspendedCount(); } if(imp.settings) { settings = imp.settings; localStorage.setItem('mySettingsData', JSON.stringify(settings)); syncCloud('settings', settings); initSettings();} } renderItems(); updateCustomerDropdown(); showToast("تم الاسترجاع!"); } catch (err) { alert("ملف غير صالح!"); } }; reader.readAsText(file); event.target.value = ''; }  
+    function importBackup(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const imp = JSON.parse(e.target.result); if(Array.isArray(imp)) { items = imp; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } else { if(imp.items) { items = imp.items; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } if(imp.archive) { archive = imp.archive; localStorage.setItem('myArchiveData', JSON.stringify(archive)); syncCloud('archive', archive); } if(imp.expenses) { expenses = imp.expenses; localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses); } if(imp.suppliers) { suppliers = imp.suppliers; localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); syncCloud('suppliers', suppliers); } if(imp.inventoryLog) { inventoryLog = imp.inventoryLog; localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); syncCloud('inventoryLog', inventoryLog); } if(imp.employees) { employees = imp.employees; localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); } if(imp.suspendedInvoices) { suspendedInvoices = imp.suspendedInvoices; localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); syncCloud('suspendedInvoices', suspendedInvoices); updateSuspendedCount(); } if(imp.settings) { settings = imp.settings; localStorage.setItem('mySettingsData', JSON.stringify(settings)); syncCloud('settings', settings); initSettings();} } renderItems(); updateCustomerDropdown(); showToast("تم الاسترجاع بنجاح!"); } catch (err) { alert("ملف غير صالح!"); } }; reader.readAsText(file); event.target.value = ''; }  
     
     function annualArchiving() {
         if(currentRole !== 'admin') { alert("هذه الصلاحية للمدير فقط!"); return; }
