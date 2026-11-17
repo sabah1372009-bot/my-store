@@ -115,7 +115,7 @@
             #main-app { display: block !important; padding: 0 !important; }
             .modal { position: static !important; box-shadow: none !important; padding: 0 !important; background: transparent !important; display: block !important; max-height: none !important; overflow: visible !important; border-radius: 0 !important; } 
             
-            #addModal, #payModal, #historyModal, #itemHistoryModal, #empModal, #empAdvanceModal, #suspendedModal, #supImageModal, #lowStockModal, #pinModal, #generalPayModal, .modal-header, .input-group, .btn-save, .btn-cancel, #invoiceTableContainer, #invoiceTotalsContainer, #invoiceActionButtons, #invoiceTabsContainer, #invoiceInputsForm { display: none !important; }  
+            #addModal, #payModal, #historyModal, #itemHistoryModal, #empModal, #empAdjustModal, #suspendedModal, #supImageModal, #lowStockModal, #pinModal, #generalPayModal, .modal-header, .input-group, .btn-save, .btn-cancel, #invoiceTableContainer, #invoiceTotalsContainer, #invoiceActionButtons, #invoiceTabsContainer, #invoiceInputsForm, #debtLimitAlert { display: none !important; }  
             
             .print-only { display: none !important; }
             .print-only.active-print { display: block !important; direction: rtl; font-family: 'Arial', sans-serif; padding: 10px; width: 100%; } 
@@ -147,7 +147,7 @@
             .print-footer { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 15px; font-weight: bold; font-size: 16px; } 
             .signatures { display: flex; width: 100%; justify-content: space-around; align-items: flex-end; margin-top: 10px;} 
             
-            .print-summary-box { width: 50%; border: 1px solid #0b4a8f; border-radius: 8px; overflow: hidden; margin-left:auto; box-shadow: 0 2px 5px rgba(0,0,0,0.05); } 
+            .print-summary-box { width: 55%; border: 1px solid #0b4a8f; border-radius: 8px; overflow: hidden; margin-left:auto; box-shadow: 0 2px 5px rgba(0,0,0,0.05); } 
             .print-summary-row { display: flex; border-bottom: 1px solid #ddd; background: #fafafa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;} 
             .print-summary-row:last-child { border-bottom: none; } 
             .print-summary-label { padding: 8px 15px; width: 45%; border-left: 1px solid #ddd; } 
@@ -269,17 +269,28 @@
             <div class="item-card" style="flex-direction:column; align-items:stretch; gap:10px;">
                 <div style="display:flex; gap:10px;">
                     <input type="text" id="supName" class="search-box" placeholder="اسم الشركة / التاجر" list="supList"><datalist id="supList"></datalist>
-                    <select id="supType" class="filter-box"><option value="فاتورة">فاتورة شراء 📥</option><option value="تسديد">تسديد حوالة 📤</option></select>
+                    <select id="supType" class="filter-box" onchange="toggleSupStockLink()"><option value="فاتورة">فاتورة شراء 📥</option><option value="تسديد">تسديد حوالة 📤</option></select>
                 </div>
                 <div style="display:flex; gap:10px;">
                     <input type="number" id="supAmount" class="search-box" placeholder="المبلغ">
                     <input type="text" id="supNote" class="search-box" placeholder="ملاحظة (رقم القائمة أو الحوالة)">
+                </div>
+                <div id="supStockLinkRow" style="display:flex; gap:10px; background:rgba(23,162,184,0.08); padding:8px; border-radius:8px; border:1px dashed #17a2b8;">
+                    <input type="text" id="supLinkedItem" class="search-box" style="flex:2;" placeholder="📦 ربط بمادة لزيادة المخزن (اختياري)" list="supItemsDatalist">
+                    <datalist id="supItemsDatalist"></datalist>
+                    <input type="number" id="supLinkedQty" class="filter-box" style="flex:1;" placeholder="الكمية +">
                 </div>
                 <div style="display:flex; gap:10px; align-items:center;">
                     <input type="file" id="supImageInput" accept="image/*" style="display:none;" onchange="handleSupImage(event)">
                     <button class="btn-save" id="supImageBtn" style="background:#6c757d; margin:0; flex:1;" onclick="document.getElementById('supImageInput').click()">📷 إرفاق صورة الوصل</button>
                     <button class="btn-save" style="background:#0b4a8f; margin:0; flex:2;" onclick="saveSupplierTx()">حفظ العملية</button>
                 </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+                <select id="supFilterSelect" class="filter-box" style="flex:2;" onchange="renderSuppliers()">
+                    <option value="الكل">عرض جميع الشركات والمجهزين</option>
+                </select>
+                <button class="btn-main" id="btnPrintSupStatement" style="background:#17a2b8; flex:1; display:none; margin:0;" onclick="printSupplierStatement()">🖨️ طباعة كشف الشركة (PDF)</button>
             </div>
         </div>  
         <div class="expenses-container" id="suppliersList"></div>  
@@ -300,7 +311,7 @@
 
     <div id="view-employees" class="app-view">  
         <div class="controls-container">
-            <h3 style="margin:0 0 10px 0;">👷 إدارة العمال والسلف</h3>
+            <h3 style="margin:0 0 10px 0;">👷 إدارة العمال والسلف واليوميات</h3>
             <button class="btn-save" style="background:#17a2b8;" onclick="openEmpModal()">➕ إضافة عامل جديد</button>
         </div>  
         <div id="employeesList" style="padding:15px;"></div>  
@@ -335,6 +346,9 @@
             <p style="font-size:12px; color:var(--sub-text); text-align:center;">* المصاريف لا تخصم إذا اخترت عرض قسم محدد.</p>
             <h3 style="color:#0b4a8f; border-bottom: 2px solid #0b4a8f; padding-bottom:5px; margin-top:20px;">تفصيل الأرباح والمبيعات حسب القسم</h3>
             <table class="invoice-table-screen" id="categoryStatsTable" style="font-size: 14px;"></table>
+
+            <h3 style="color:#6f42c1; border-bottom: 2px solid #6f42c1; padding-bottom:5px; margin-top:25px;">👷 إحصائية منفذي العمل (الخلفات والأسطوات)</h3>
+            <table class="invoice-table-screen" id="executorsStatsTable" style="font-size: 14px;"></table>
         </div>  
     </div>
 
@@ -346,7 +360,19 @@
                     <label style="color:#dc3545;">🔑 الرمز السري للإدارة (PIN لقفل صلاحيات الكاشير)</label>
                     <input type="text" id="setAdminPin" placeholder="مثال: 1234">
                 </div>
-                <div class="input-group"><label>سعر صرف الـ 100 دولار</label><input type="number" id="setUsdRate" placeholder="مثال: 150000"></div>
+                <div class="input-group" style="background:rgba(40,167,69,0.06); padding:10px; border-radius:8px; border:1px solid #28a745;">
+                    <label style="color:#28a745;">💱 نظام العملة في الوصل والطباعة</label>
+                    <select id="setCurrencyMode" style="margin-bottom:8px;">
+                        <option value="dual">عملتين معاً (دينار عراقي + دولار أمريكي $)</option>
+                        <option value="iqd">دينار عراقي فقط (د.ع)</option>
+                    </select>
+                    <label>سعر صرف الـ 100 دولار (بالدينار العراقي)</label>
+                    <input type="number" id="setUsdRate" placeholder="مثال: 150000">
+                </div>
+                <div class="input-group" style="background:rgba(253,126,20,0.08); padding:10px; border-radius:8px; border:1px dashed #fd7e14;">
+                    <label style="color:#d9534f;">🚨 سقف الدين المسموح للزبون الواحد (دينار)</label>
+                    <input type="number" id="setDebtLimit" placeholder="مثال: 1000000 (اتركه 0 لإلغاء التنبيه)">
+                </div>
                 <div class="input-group"><label>اسم المحاسب / المجهز</label><input type="text" id="setAccountant"></div>
                 <div class="input-group"><label>رقم الهاتف الأول</label><input type="tel" id="setPhone1"></div>
                 <div class="input-group"><label>رقم الهاتف الثاني</label><input type="tel" id="setPhone2"></div>
@@ -360,6 +386,16 @@
                 </div>
 
                 <button class="btn-save" onclick="saveSettings()">💾 حفظ الإعدادات</button>
+
+                <div style="background:rgba(111,66,193,0.06); padding:12px; border-radius:8px; border:1px solid #6f42c1;">
+                    <h4 style="margin:0 0 8px 0; color:#6f42c1;">📈 تعديل أسعار قسم كامل بنسبة مئوية (%)</h4>
+                    <div style="display:flex; gap:8px; margin-bottom:8px;">
+                        <select id="bulkCatSelect" style="flex:2; padding:8px; border-radius:6px; border:1px solid #ccc;"><option value="الكل">جميع الأقسام</option></select>
+                        <input type="number" id="bulkPercentInput" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc;" placeholder="مثال: 5 أو -5">
+                    </div>
+                    <button class="btn-save" style="background:#6f42c1; margin:0; font-size:14px; padding:10px;" onclick="bulkUpdatePrices()">⚡ تطبيق النسبة على الأسعار فوراً</button>
+                </div>
+
                 <hr style="width:100%; border:0; border-top:1px solid #ddd;">
                 <button class="btn-save" style="background:#ffc107; color:#000;" onclick="annualArchiving()">🧹 الترحيل السنوي (تصفية النظام)</button>
                 <p style="font-size:11px; margin-top:-5px; color:var(--sub-text); text-align:center;">* يمسح الوصولات المسددة بالكامل لتخفيف السيرفر، ويحتفظ بالديون فقط.</p>
@@ -393,7 +429,6 @@
         <button class="btn-cancel" onclick="closeModals()">إلغاء</button>
     </div>
 
-    <!-- نافذة تسديد دفعة عامة من حساب الزبون -->
     <div class="modal" id="generalPayModal">
         <h3 class="modal-header"><span>💵 استلام دفعة عامة من الحساب</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>
         <div class="input-group">
@@ -447,23 +482,24 @@
         <h3 class="modal-header"><span>👷 إضافة / تعديل عامل</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>
         <input type="hidden" id="empIndex" value="-1">
         <div class="input-group"><label>اسم العامل</label><input type="text" id="empName" placeholder="الاسم"></div>
-        <div class="input-group"><label>الراتب</label><input type="number" id="empSalary" placeholder="مثال: 500000"></div>
+        <div class="input-group"><label>الراتب الأساسي</label><input type="number" id="empSalary" placeholder="مثال: 500000"></div>
         <button class="btn-save" onclick="saveEmployee()">حفظ معلومات العامل</button><button class="btn-cancel" onclick="closeModals()">إلغاء</button>
     </div>
 
-    <div class="modal" id="empAdvanceModal">
-        <h3 class="modal-header"><span>💵 تسليم السلفة لعامل</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>
-        <input type="hidden" id="advanceEmpIndex" value="-1">
-        <p id="advanceEmpNameDisplay" style="text-align:center; font-weight:bold; color:#0b4a8f; margin-top:0; font-size:16px;"></p>
+    <div class="modal" id="empAdjustModal">
+        <h3 class="modal-header"><span id="empAdjustTitle">💵 حركة مالية للعامل</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>
+        <input type="hidden" id="adjustEmpIndex" value="-1">
+        <input type="hidden" id="adjustEmpType" value="advance">
+        <p id="adjustEmpNameDisplay" style="text-align:center; font-weight:bold; color:#0b4a8f; margin-top:0; font-size:16px;"></p>
         <div class="input-group">
-            <label>مبلغ السلفة (دينار)</label>
-            <input type="number" id="advanceAmountInput" placeholder="أدخل المبلغ">
+            <label>المبلغ (دينار)</label>
+            <input type="number" id="adjustAmountInput" placeholder="أدخل المبلغ">
         </div>
         <div class="input-group">
-            <label>تفاصيل / سبب السلفة (اختياري)</label>
-            <input type="text" id="advanceNoteInput" placeholder="مثال: علاج، سكاير، أجور نقل...">
+            <label>التفاصيل / السبب (اختياري)</label>
+            <input type="text" id="adjustNoteInput" placeholder="مثال: يومية عمل إضافي، غياب يوم، سلفة...">
         </div>
-        <button class="btn-save" style="background:#ffc107; color:#000;" onclick="confirmEmpAdvance()">حفظ وتسجيل السلفة</button>
+        <button class="btn-save" id="btnConfirmEmpAdjust" onclick="confirmEmpAdjust()">حفظ وتأكيد العملية</button>
         <button class="btn-cancel" onclick="closeModals()">إلغاء</button>
     </div>
 
@@ -492,6 +528,8 @@
         
         <div id="invoiceTabsContainer"></div>
 
+        <div id="debtLimitAlert" style="display:none; background:#dc3545; color:#fff; padding:10px; border-radius:8px; margin-bottom:10px; font-weight:bold; text-align:center; font-size:14px;"></div>
+
         <div id="invoiceInputsForm">  
             <div class="input-group" style="background: rgba(111, 66, 193, 0.05); padding: 10px; border-radius: 8px; border: 1px solid #6f42c1;">
                 <label style="color: #6f42c1;">نوع القائمة</label>
@@ -503,12 +541,16 @@
             <div style="display:flex; gap:10px;">
                 <div class="input-group" style="flex:1;">
                     <label>اسم الزبون</label>
-                    <input type="text" id="customerName" oninput="renderInvoiceDetails(); updateTabTitle()" onchange="renderInvoiceDetails(); updateTabTitle()" list="customersList" autocomplete="off">
+                    <input type="text" id="customerName" oninput="onCustomerNameInput()" onchange="onCustomerNameInput()" list="customersList" autocomplete="off">
                     <datalist id="customersList"></datalist>
                 </div>
-                <div class="input-group" style="flex:1;"><label>منفذ العمل</label><input type="text" id="executorName" oninput="updatePrintInfo(); updateTabTitle()"></div>
+                <div class="input-group" style="flex:1;"><label>منفذ العمل</label><input type="text" id="executorName" list="executorsList" oninput="updatePrintInfo(); updateTabTitle()"><datalist id="executorsList"></datalist></div>
             </div>  
             <div style="display:flex; gap:10px;"><div class="input-group" style="flex:2;"><label>العنوان</label><input type="text" id="customerAddress" oninput="updatePrintInfo(); updateTabTitle()"></div><div class="input-group" style="flex:1;"><label>رقم الهاتف</label><input type="tel" id="customerPhone" oninput="updatePrintInfo(); updateTabTitle()"></div></div>  
+            <div class="input-group">
+                <label style="color:#0b4a8f;">📝 ملاحظات الوصل / موعد التجهيز (اختياري)</label>
+                <input type="text" id="invoiceNote" placeholder="مثال: تجهيز يوم الخميس / قص حسب القياس / استلام من المخزن الثاني..." oninput="renderInvoiceDetails(); updateTabTitle()">
+            </div>
             <div class="input-group" id="invoiceSearchGroup" style="position: relative; z-index: 1050; border: 2px solid #007bff; border-radius: 8px; padding: 10px; background: rgba(0,123,255,0.05);">
                 <label style="color:#007bff;">🔍 ابحث وأضف مادة للوصل</label>
                 <input type="text" id="invoiceSearchInput" placeholder="اكتب اسم المادة هنا واضغط عليها..." onkeyup="handleInvoiceSearch()" onfocus="handleInvoiceSearch()" autocomplete="off">
@@ -551,12 +593,12 @@
     <div class="print-only" id="lowStockPrintSection"></div>
     <div class="print-only" id="receiptPrintSection"></div>
     <div class="print-only" id="statsPrintSection"></div>
+    <div class="print-only" id="supplierPrintSection"></div>
 </div>
 
 <div id="toast" class="toast">تمت العملية بنجاح!</div>  
 
 <script>  
-    // دالة التفقيط (لتحويل الأرقام إلى كتابة بالعربي)
     function numberToArabicWords(number) {
         if (number === 0) return "صفر";
         const units = ["", "ألف", "مليون", "مليار"];
@@ -614,6 +656,21 @@
         return isNegative ? "رصيد دائن: " + finalStr : finalStr;
     }
 
+    function playWarningBeep() {
+        try {
+            let ctx = new (window.AudioContext || window.webkitAudioContext)();
+            let osc = ctx.createOscillator();
+            let gain = ctx.createGain();
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(520, ctx.currentTime);
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.25);
+        } catch(e) {}
+    }
+
     function showToast(text) { 
         const t = document.getElementById("toast"); 
         if(t) { 
@@ -643,25 +700,53 @@
     window.addEventListener('offline', () => { 
         let el = document.getElementById('networkStatus'); 
         if(el) { el.innerHTML = '🟠 يعمل محلياً (Offline)'; el.style.background = '#fd7e14'; } 
-        showToast("⚠️ انقطع الإنترنت! تم تفعيل وضع الطوارئ المحلي (تستطيع البيع وحفظ البيانات محلياً)."); 
+        showToast("⚠️ انقطع الإنترنت! تم تفعيل وضع الطوارئ المحلي."); 
     });
     window.addEventListener('online', () => { 
         let el = document.getElementById('networkStatus'); 
         if(el) { el.innerHTML = '🟢 متصل'; el.style.background = '#28a745'; } 
-        showToast("✅ عاد الاتصال! جاري مزامنة البيانات المحلية مع السحابة..."); 
+        showToast("✅ عاد الاتصال! جاري مزامنة البيانات..."); 
         if(currentUser) syncAllToCloud(); 
     });
     
     if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "ضع_المفتاح_هنا") { firebase.initializeApp(firebaseConfig); isCloudReady = true; }
 
     let items = []; let archive = []; let expenses = []; let suppliers = []; let inventoryLog = []; let employees = []; let suspendedInvoices = []; let currentSupImageBase64 = ""; 
-    let settings = { usdRate: 150000, accountant: "صباح", phone1: "07804884656", phone2: "07802204431", address: "الأنبار - الرمادي", logo: "https://cdn-icons-png.flaticon.com/512/2163/2163350.png", stampImage: "", adminPin: "1234" };  
+    let settings = { currencyMode: "dual", usdRate: 150000, debtLimit: 0, accountant: "صباح", phone1: "07804884656", phone2: "07802204431", address: "الأنبار - الرمادي", logo: "https://cdn-icons-png.flaticon.com/512/2163/2163350.png", stampImage: "", adminPin: "1234" };  
       
     let invoiceTabs = []; 
     let activeTabIndex = 0;
 
+    function formatDualAmountHTML(iqdAmount, isPrint = false, customRate = null, customMode = null) {
+        let amt = parseFloat(iqdAmount) || 0;
+        let iqdStr = amt.toLocaleString() + " د.ع";
+        let mode = customMode || settings.currencyMode || "dual";
+        let rate = customRate ? (parseFloat(customRate) || 150000) : (parseFloat(settings.usdRate) || 150000);
+        if (mode === "dual" && rate > 0) {
+            let usdVal = (amt / (rate / 100)).toFixed(2);
+            if (isPrint) {
+                return `${iqdStr}<br><span style="font-size:12px; color:#0b4a8f; font-weight:bold;">($${usdVal})</span>`;
+            } else {
+                return `${iqdStr} <span style="font-size:12px; color:#17a2b8;">($${usdVal})</span>`;
+            }
+        }
+        return iqdStr;
+    }
+
+    function formatDualAmountText(iqdAmount, customRate = null, customMode = null) {
+        let amt = parseFloat(iqdAmount) || 0;
+        let iqdStr = amt.toLocaleString() + " د.ع";
+        let mode = customMode || settings.currencyMode || "dual";
+        let rate = customRate ? (parseFloat(customRate) || 150000) : (parseFloat(settings.usdRate) || 150000);
+        if (mode === "dual" && rate > 0) {
+            let usdVal = (amt / (rate / 100)).toFixed(2);
+            return `${iqdStr} ($${usdVal})`;
+        }
+        return iqdStr;
+    }
+
     function getEmptyDraft() {
-        return { customer: "", executor: "", address: "", phone: "", type: "مبيع", discount: 0, paid: "", deliveryFee: 0, items: [], editingArchiveId: null, origInvNo: null, origDate: null };
+        return { customer: "", executor: "", address: "", phone: "", note: "", type: "مبيع", discount: 0, paid: "", deliveryFee: 0, items: [], editingArchiveId: null, origInvNo: null, origDate: null, savedUsdRate: null, savedCurrencyMode: null };
     }
 
     function loginApp(role) { 
@@ -866,20 +951,22 @@
     });
     
     function closeModals() {  
-        const modals = ["addModal", "invoiceModal", "payModal", "historyModal", "itemHistoryModal", "empModal", "empAdvanceModal", "suspendedModal", "supImageModal", "lowStockModal", "pinModal", "generalPayModal"];
+        const modals = ["addModal", "invoiceModal", "payModal", "historyModal", "itemHistoryModal", "empModal", "empAdjustModal", "suspendedModal", "supImageModal", "lowStockModal", "pinModal", "generalPayModal"];
         modals.forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove("active"); });
         
         setTimeout(() => { 
             let overlay = document.getElementById("overlay");
             if(overlay) overlay.style.display = "none"; 
-            ["itemName", "itemPrice", "itemCost", "itemMeasure", "itemCategory", "itemStock", "itemSupplier", "advanceAmountInput", "advanceNoteInput"].forEach(id => { let el = document.getElementById(id); if(el) el.value = ""; });
+            ["itemName", "itemPrice", "itemCost", "itemMeasure", "itemCategory", "itemStock", "itemSupplier", "adjustAmountInput", "adjustNoteInput"].forEach(id => { let el = document.getElementById(id); if(el) el.value = ""; });
             viewModeInvoice = null; viewModeArchiveIndex = -1; editingIndex = -1; 
         }, 300);   
     }  
 
     function initSettings() { 
         document.documentElement.style.setProperty('--bg-logo', `url('${settings.logo}')`); 
+        if(document.getElementById('setCurrencyMode')) document.getElementById('setCurrencyMode').value = settings.currencyMode || "dual";
         document.getElementById('setUsdRate').value = settings.usdRate; 
+        if(document.getElementById('setDebtLimit')) document.getElementById('setDebtLimit').value = settings.debtLimit || 0;
         document.getElementById('setAccountant').value = settings.accountant; 
         document.getElementById('setPhone1').value = settings.phone1; 
         document.getElementById('setPhone2').value = settings.phone2; 
@@ -921,7 +1008,9 @@
 
     function saveSettings() { 
         if(currentRole !== 'admin') return alert("صلاحية الإدارة فقط!");
+        settings.currencyMode = document.getElementById('setCurrencyMode').value || "dual";
         settings.usdRate = document.getElementById('setUsdRate').value; 
+        settings.debtLimit = parseFloat(document.getElementById('setDebtLimit').value) || 0;
         settings.accountant = document.getElementById('setAccountant').value; 
         settings.phone1 = document.getElementById('setPhone1').value; 
         settings.phone2 = document.getElementById('setPhone2').value; 
@@ -931,8 +1020,36 @@
         localStorage.setItem('mySettingsData', JSON.stringify(settings)); 
         syncCloud('settings', settings); 
         initSettings(); 
-        showToast("تم حفظ الإعدادات محلياً وسحابياً!"); 
+        showToast("تم حفظ الإعدادات بنجاح!"); 
     }  
+
+    function bulkUpdatePrices() {
+        if(currentRole !== 'admin') return alert("صلاحية الإدارة فقط!");
+        let cat = document.getElementById("bulkCatSelect").value;
+        let pct = parseFloat(document.getElementById("bulkPercentInput").value);
+        if(isNaN(pct) || pct === 0) return alert("يرجى إدخال نسبة مئوية صحيحة (مثال: 5 للزيادة أو -5 للتخفيض)!");
+        
+        let targetName = cat === "الكل" ? "جميع مواد المخزن" : `قسم (${cat})`;
+        if(!confirm(`هل أنت متأكد من تعديل أسعار ${targetName} بنسبة (${pct > 0 ? '+' + pct : pct}%)؟`)) return;
+
+        let count = 0;
+        items.forEach(item => {
+            let itemCat = item.category || 'عام';
+            if(cat === "الكل" || itemCat === cat) {
+                let oldPrice = parseFloat(item.price) || 0;
+                let newPrice = oldPrice * (1 + (pct / 100));
+                newPrice = Math.round(newPrice / 250) * 250;
+                item.price = newPrice;
+                count++;
+            }
+        });
+
+        localStorage.setItem('myPricesData', JSON.stringify(items));
+        syncCloud('items', items);
+        document.getElementById("bulkPercentInput").value = "";
+        renderItems();
+        showToast(`✅ تم تحديث أسعار ${count} مادة بنجاح!`);
+    }
     
     function toggleTheme() { 
         const newTheme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; 
@@ -963,10 +1080,15 @@
     function updateCustomerDropdown() { 
         let el = document.getElementById("customersList");
         let genList = document.getElementById("genPayCustomersList");
+        let execList = document.getElementById("executorsList");
         let customers = [...new Set(archive.map(a => a.customer))].filter(c => c && c.trim() !== "" && c !== "زبون نقدي"); 
         let listHTML = ""; customers.forEach(c => listHTML += `<option value="${c}">`); 
         if(el) el.innerHTML = listHTML;
         if(genList) genList.innerHTML = listHTML;
+
+        let executors = [...new Set(archive.map(a => a.executor))].filter(ex => ex && ex.trim() !== "");
+        let exHTML = ""; executors.forEach(ex => exHTML += `<option value="${ex}">`);
+        if(execList) execList.innerHTML = exHTML;
     }
     
     function updateStatementDropdown() { 
@@ -989,8 +1111,21 @@
         if(filterBox2) { 
             const currentVal2 = filterBox2.value; filterBox2.innerHTML = '<option value="الكل">الكل (جميع الأقسام)</option>'; 
             categories.forEach(c => filterBox2.innerHTML += `<option value="${c}">${c}</option>`); filterBox2.value = categories.includes(currentVal2) ? currentVal2 : "الكل"; 
-        } 
+        }
+        const bulkSelect = document.getElementById("bulkCatSelect");
+        if(bulkSelect) {
+            const cVal3 = bulkSelect.value;
+            bulkSelect.innerHTML = '<option value="الكل">جميع الأقسام</option>';
+            categories.forEach(c => bulkSelect.innerHTML += `<option value="${c}">${c}</option>`);
+            bulkSelect.value = categories.includes(cVal3) ? cVal3 : "الكل";
+        }
         const dataList = document.getElementById("categoryList"); dataList.innerHTML = ""; categories.forEach(c => dataList.innerHTML += `<option value="${c}">`); 
+        
+        const supItemsDatalist = document.getElementById("supItemsDatalist");
+        if(supItemsDatalist) {
+            supItemsDatalist.innerHTML = "";
+            items.forEach(i => supItemsDatalist.innerHTML += `<option value="${i.name}">`);
+        }
     }  
 
     function renderItems() { 
@@ -1010,7 +1145,7 @@
                     <button class="edit-btn" onclick="editItem(${index})">تعديل</button>
                     <button class="delete-btn" onclick="deleteItem(${index})">حذف</button>
                 ` : ''; 
-                list.innerHTML += `<div class="item-card"><div class="item-info"><h3>${item.name}</h3><p><span class="badge">${itemCat}</span> ${stockBadge}</p>${item.measure ? `<p>القياس: ${item.measure}</p>` : ""}</div><div class="price-container"><div class="item-price">${parseFloat(item.price).toLocaleString()} د.ع</div><div class="actions">${adminButtons}</div></div></div>`; 
+                list.innerHTML += `<div class="item-card"><div class="item-info"><h3>${item.name}</h3><p><span class="badge">${itemCat}</span> ${stockBadge}</p>${item.measure ? `<p>القياس: ${item.measure}</p>` : ""}</div><div class="price-container"><div class="item-price">${formatDualAmountHTML(item.price)}</div><div class="actions">${adminButtons}</div></div></div>`; 
             } 
         }); 
     }  
@@ -1074,7 +1209,7 @@
     function sharePrices() {
         if(items.length === 0) return alert("المخزن فارغ!");
         let text = "📋 *قائمة أسعار فؤاد الچليباوي للديكورات*\n━━━━━━━━━━━━━━━━━\n";
-        items.forEach(i => { text += `🔹 *${i.name}* : ${parseFloat(i.price).toLocaleString()} د.ع\n`; });
+        items.forEach(i => { text += `🔹 *${i.name}* : ${formatDualAmountText(i.price)}\n`; });
         window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
     }
 
@@ -1083,67 +1218,109 @@
     function saveEmployee() { 
         let name = document.getElementById("empName").value.trim(); let salary = parseFloat(document.getElementById("empSalary").value) || 0; let idx = parseInt(document.getElementById("empIndex").value); 
         if(!name || salary <= 0) { alert("أدخل اسم وراتب صحيح!"); return; } 
-        if(idx > -1) { employees[idx].name = name; employees[idx].salary = salary; showToast("تم التعديل!"); } else { employees.push({ id: Date.now(), name: name, salary: salary, advances: 0 }); showToast("تم الإضافة!"); } 
+        if(idx > -1) { employees[idx].name = name; employees[idx].salary = salary; showToast("تم التعديل!"); } else { employees.push({ id: Date.now(), name: name, salary: salary, advances: 0, bonuses: 0, deductions: 0 }); showToast("تم الإضافة!"); } 
         localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); closeModals(); renderEmployees(); 
     }
     
     function editEmployee(idx) { document.getElementById("empIndex").value = idx; document.getElementById("empName").value = employees[idx].name; document.getElementById("empSalary").value = employees[idx].salary; document.getElementById("overlay").style.display = "block"; setTimeout(() => { document.getElementById("empModal").classList.add("active"); }, 10); }
     function deleteEmployee(idx) { if(confirm("تأكيد حذف العامل؟")) { employees.splice(idx, 1); localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); renderEmployees(); showToast("تم الحذف"); } }
     
-    function giveEmpAdvance(idx) { 
+    function openEmpAdjustModal(idx, type) { 
         let emp = employees[idx]; 
-        document.getElementById("advanceEmpIndex").value = idx;
-        document.getElementById("advanceEmpNameDisplay").innerText = `العامل: ${emp.name}`;
-        document.getElementById("advanceAmountInput").value = "";
-        document.getElementById("advanceNoteInput").value = "";
+        document.getElementById("adjustEmpIndex").value = idx;
+        document.getElementById("adjustEmpType").value = type;
+        document.getElementById("adjustEmpNameDisplay").innerText = `العامل: ${emp.name}`;
+        document.getElementById("adjustAmountInput").value = "";
+        document.getElementById("adjustNoteInput").value = "";
+        
+        let titleEl = document.getElementById("empAdjustTitle");
+        let btnEl = document.getElementById("btnConfirmEmpAdjust");
+        if(type === 'advance') {
+            titleEl.innerText = "💵 تسليم سلفة للعامل";
+            btnEl.style.background = "#ffc107"; btnEl.style.color = "#000";
+        } else if(type === 'bonus') {
+            titleEl.innerText = "➕ إضافة يومية / مكافأة للعامل";
+            btnEl.style.background = "#28a745"; btnEl.style.color = "#fff";
+        } else {
+            titleEl.innerText = "➖ خصم غياب / مخالفة من العامل";
+            btnEl.style.background = "#dc3545"; btnEl.style.color = "#fff";
+        }
+
         document.getElementById("overlay").style.display = "block"; 
-        setTimeout(() => { document.getElementById("empAdvanceModal").classList.add("active"); }, 10);
+        setTimeout(() => { document.getElementById("empAdjustModal").classList.add("active"); document.getElementById("adjustAmountInput").focus(); }, 10);
     }
     
-    function confirmEmpAdvance() {
-        let idx = parseInt(document.getElementById("advanceEmpIndex").value);
+    function confirmEmpAdjust() {
+        let idx = parseInt(document.getElementById("adjustEmpIndex").value);
         if(idx < 0) return;
         let emp = employees[idx];
-        let amt = parseFloat(document.getElementById("advanceAmountInput").value);
-        let note = document.getElementById("advanceNoteInput").value.trim();
+        let type = document.getElementById("adjustEmpType").value;
+        let amt = parseFloat(document.getElementById("adjustAmountInput").value);
+        let note = document.getElementById("adjustNoteInput").value.trim();
         
-        if(isNaN(amt) || amt <= 0) { alert("أدخل مبلغ صحيح للسلفة!"); return; }
+        if(isNaN(amt) || amt <= 0) { alert("أدخل مبلغ صحيح أكبر من صفر!"); return; }
         
-        emp.advances += amt;
-        let expName = note ? `سلفة للعامل: ${emp.name} - ${note}` : `سلفة للعامل: ${emp.name}`;
+        if(emp.bonuses === undefined) emp.bonuses = 0;
+        if(emp.deductions === undefined) emp.deductions = 0;
+
+        if(type === 'advance') {
+            emp.advances += amt;
+            let expName = note ? `سلفة للعامل: ${emp.name} - ${note}` : `سلفة للعامل: ${emp.name}`;
+            expenses.unshift({ id: Date.now(), name: expName, category: 'رواتب', amount: amt, date: new Date().toLocaleDateString('en-GB') });
+            localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses);
+            showToast("💵 تم تسجيل السلفة!");
+        } else if(type === 'bonus') {
+            emp.bonuses += amt;
+            let expName = note ? `مكافأة/إضافي للعامل: ${emp.name} - ${note}` : `مكافأة/إضافي للعامل: ${emp.name}`;
+            expenses.unshift({ id: Date.now(), name: expName, category: 'رواتب', amount: 0, noteOnly: true, realAmt: amt, date: new Date().toLocaleDateString('en-GB') });
+            localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses);
+            showToast("➕ تم إضافة اليومية/المكافأة لراتب العامل!");
+        } else if(type === 'deduction') {
+            emp.deductions += amt;
+            let expName = note ? `خصم غياب للعامل: ${emp.name} - ${note}` : `خصم غياب للعامل: ${emp.name}`;
+            expenses.unshift({ id: Date.now(), name: expName, category: 'رواتب', amount: 0, noteOnly: true, realAmt: amt, date: new Date().toLocaleDateString('en-GB') });
+            localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses);
+            showToast("➖ تم تسجيل الخصم على العامل!");
+        }
         
-        expenses.unshift({ id: Date.now(), name: expName, category: 'رواتب', amount: amt, date: new Date().toLocaleDateString('en-GB') });
-        localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses);
         localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees);
-        
-        closeModals(); renderEmployees(); renderExpenses(); showToast("تم تسجيل السلفة!");
+        closeModals(); renderEmployees(); renderExpenses();
     }
 
     function settleEmpSalary(idx) { 
-        let emp = employees[idx]; let remain = emp.salary - emp.advances; 
-        if(confirm(`تصفية راتب العامل ( ${emp.name} )\nالمتبقي له نقداً: ${remain.toLocaleString()} د.ع\nهل تريد تسليم الباقي وتصفير السلف؟`)) { 
+        let emp = employees[idx]; 
+        let bonuses = parseFloat(emp.bonuses) || 0;
+        let deductions = parseFloat(emp.deductions) || 0;
+        let remain = (emp.salary + bonuses) - (emp.advances + deductions); 
+        if(confirm(`تصفية راتب العامل ( ${emp.name} )\nصافي المتبقي له نقداً: ${remain.toLocaleString()} د.ع\nهل تريد تسليم الباقي وتصفير السلف واليوميات والخصومات؟`)) { 
             if(remain > 0) { 
                 expenses.unshift({ id: Date.now(), name: `تصفية راتب العامل: ${emp.name}`, category: 'رواتب', amount: remain, date: new Date().toLocaleDateString('en-GB') }); 
                 localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses); 
             } 
-            emp.advances = 0; localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); renderEmployees(); showToast("تم التصفية!"); 
+            emp.advances = 0; emp.bonuses = 0; emp.deductions = 0;
+            localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); renderEmployees(); showToast("تم التصفية!"); 
         } 
     }
     
     function printEmpStatement(idx) {
-        let emp = employees[idx]; let remain = emp.salary - emp.advances;
-        let advHistory = expenses.filter(ex => ex.name === `سلفة للعامل: ${emp.name}` || ex.name.startsWith(`سلفة للعامل: ${emp.name} - `));
+        let emp = employees[idx]; 
+        let bonuses = parseFloat(emp.bonuses) || 0;
+        let deductions = parseFloat(emp.deductions) || 0;
+        let remain = (emp.salary + bonuses) - (emp.advances + deductions);
+        let empLogs = expenses.filter(ex => ex.name.includes(`للعامل: ${emp.name}`));
         let rows = ''; let counter = 1;
         
-        advHistory.forEach(ex => {
-            let desc = ex.name.includes("-") ? ex.name.split("-")[1].trim() : "سلفة نقدية مستلمة";
-            rows += `<tr><td>${counter++}</td><td>${ex.date}</td><td>${desc}</td><td style="color:#dc3545; font-weight:bold;">${ex.amount.toLocaleString()} د.ع</td></tr>`;
+        empLogs.forEach(ex => {
+            let desc = ex.name;
+            let val = ex.noteOnly ? (ex.realAmt || 0) : ex.amount;
+            let color = ex.name.startsWith("مكافأة") ? "#28a745" : "#dc3545";
+            rows += `<tr><td>${counter++}</td><td>${ex.date}</td><td>${desc}</td><td style="color:${color}; font-weight:bold;">${val.toLocaleString()} د.ع</td></tr>`;
         });
-        if(advHistory.length === 0) { rows = `<tr><td colspan="4" style="text-align:center;">لا توجد سلف مسجلة</td></tr>`; }
+        if(empLogs.length === 0) { rows = `<tr><td colspan="4" style="text-align:center;">لا توجد حركات مسجلة</td></tr>`; }
 
         let stampHTML = settings.stampImage ? `<br><img src="${settings.stampImage}" style="max-height:60px;">` : `<br><br>.........................`;
 
-        let printHTML = `<div class="print-header"><div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span></div><div class="print-titles"><h1 class="main-title">فــــؤاد</h1><p class="sub-title1">للديكورات الداخلية والخارجية</p></div></div><div class="invoice-type-banner" style="background-color:#17a2b8;">كشف حساب عامل / وصل استلام</div><div class="cust-info-row"><span style="flex:1;">اسم العامل: <span class="dotted-line">${emp.name}</span></span><span>التاريخ: <span class="dotted-line">${new Date().toLocaleDateString('en-GB')}</span></span></div><table class="print-table"><thead><tr><th>ت</th><th>التاريخ</th><th>البيان (التفاصيل)</th><th class="th-total">المبلغ</th></tr></thead><tbody>${rows}</tbody></table><div class="print-summary-box" style="width:100%; margin-top:20px;"><div class="print-summary-row row-blue"><div class="print-summary-label">الراتب المقرر:</div><div class="print-summary-val">${emp.salary.toLocaleString()} د.ع</div></div><div class="print-summary-row row-red"><div class="print-summary-label" style="background-color:#dc3545 !important;">مجموع السلف المستلمة:</div><div class="print-summary-val" style="color:#dc3545;">${emp.advances.toLocaleString()} د.ع</div></div><div class="print-summary-row row-blue"><div class="print-summary-label" style="background-color:#28a745 !important;">الباقي من الراتب:</div><div class="print-summary-val" style="color:#28a745;">${remain.toLocaleString()} د.ع</div></div></div><div class="print-footer" style="margin-top:40px;"><div class="signatures" style="width:100%; display:flex; justify-content:space-around; align-items:center;"><div>توقيع المحاسب / الختم${stampHTML}</div><div>توقيع العامل المستلم<br><br>.........................</div></div></div>`;
+        let printHTML = `<div class="print-header"><div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span></div><div class="print-titles"><h1 class="main-title">فــــؤاد</h1><p class="sub-title1">للديكورات الداخلية والخارجية</p></div></div><div class="invoice-type-banner" style="background-color:#17a2b8;">كشف حساب عامل / وصل استلام</div><div class="cust-info-row"><span style="flex:1;">اسم العامل: <span class="dotted-line">${emp.name}</span></span><span>التاريخ: <span class="dotted-line">${new Date().toLocaleDateString('en-GB')}</span></span></div><table class="print-table"><thead><tr><th>ت</th><th>التاريخ</th><th>البيان (التفاصيل)</th><th class="th-total">المبلغ</th></tr></thead><tbody>${rows}</tbody></table><div class="print-summary-box" style="width:100%; margin-top:20px;"><div class="print-summary-row row-blue"><div class="print-summary-label">الراتب الأساسي:</div><div class="print-summary-val">${emp.salary.toLocaleString()} د.ع</div></div><div class="print-summary-row row-blue"><div class="print-summary-label">الإضافي والمكافآت (+):</div><div class="print-summary-val" style="color:#28a745;">${bonuses.toLocaleString()} د.ع</div></div><div class="print-summary-row row-red"><div class="print-summary-label">السلف والخصومات (-):</div><div class="print-summary-val" style="color:#dc3545;">${(emp.advances + deductions).toLocaleString()} د.ع</div></div><div class="print-summary-row row-blue"><div class="print-summary-label" style="background:#28a745 !important; color:#fff !important;">صافي الباقي من الراتب:</div><div class="print-summary-val" style="color:#28a745;">${remain.toLocaleString()} د.ع</div></div></div><div class="print-footer" style="margin-top:40px;"><div class="signatures" style="width:100%; display:flex; justify-content:space-around; align-items:center;"><div>توقيع المحاسب / الختم${stampHTML}</div><div>توقيع العامل المستلم<br><br>.........................</div></div></div>`;
         
         document.getElementById("empPrintSection").innerHTML = printHTML;
         triggerPrintSection("empPrintSection");
@@ -1153,15 +1330,182 @@
         const list = document.getElementById("employeesList"); if(!list) return; list.innerHTML = ""; 
         if(employees.length === 0) { list.innerHTML = "<p style='text-align:center;'>لا يوجد عمال.</p>"; return; } 
         employees.forEach((emp, index) => { 
-            let remain = emp.salary - emp.advances; 
-            list.innerHTML += `<div class="item-card" style="flex-direction:column; align-items:stretch; border-right-color:#28a745;"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h3 style="margin:0;">👷 ${emp.name}</h3><div class="actions"><button class="edit-btn" style="padding:4px 10px;" onclick="editEmployee(${index})">تعديل</button><button class="delete-btn" style="padding:4px 10px;" onclick="deleteEmployee(${index})">حذف</button></div></div><div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:5px;"><span>الراتب المقرر:</span> <span style="font-weight:bold;">${emp.salary.toLocaleString()}</span></div><div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:5px; color:#dc3545;"><span>السلف المستلمة:</span> <span style="font-weight:bold;">${emp.advances.toLocaleString()}</span></div><div style="display:flex; justify-content:space-between; font-size:16px; margin-bottom:10px; color:#28a745; border-top:1px solid var(--border-color); padding-top:8px;"><span>الباقي من الراتب:</span> <span style="font-weight:bold;">${remain.toLocaleString()} د.ع</span></div><div style="display:flex; gap:10px; margin-bottom:5px;"><button class="btn-main" style="background:#ffc107; color:#000; flex:1;" onclick="giveEmpAdvance(${index})">💵 إعطاء سلفة</button><button class="btn-main" style="background:#28a745; flex:1;" onclick="settleEmpSalary(${index})">💰 تصفية الراتب</button></div><div style="display:flex; gap:10px;"><button class="btn-main" style="background:#17a2b8; flex:1;" onclick="printEmpStatement(${index})">🖨️ طباعة كشف حساب العامل</button></div></div>`; 
+            let bonuses = parseFloat(emp.bonuses) || 0;
+            let deductions = parseFloat(emp.deductions) || 0;
+            let remain = (emp.salary + bonuses) - (emp.advances + deductions); 
+            list.innerHTML += `<div class="item-card" style="flex-direction:column; align-items:stretch; border-right-color:#28a745;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h3 style="margin:0;">👷 ${emp.name}</h3><div class="actions"><button class="edit-btn" style="padding:4px 10px;" onclick="editEmployee(${index})">تعديل</button><button class="delete-btn" style="padding:4px 10px;" onclick="deleteEmployee(${index})">حذف</button></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px;"><span>الراتب الأساسي:</span> <span style="font-weight:bold;">${emp.salary.toLocaleString()}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px; color:#28a745;"><span>إضافي / يوميات (+):</span> <span style="font-weight:bold;">+${bonuses.toLocaleString()}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px; color:#dc3545;"><span>السلف المستلمة (-):</span> <span style="font-weight:bold;">-${emp.advances.toLocaleString()}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:6px; color:#fd7e14;"><span>خصم غيابات (-):</span> <span style="font-weight:bold;">-${deductions.toLocaleString()}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:16px; margin-bottom:10px; color:#0b4a8f; border-top:1px solid var(--border-color); padding-top:8px;"><span>صافي الباقي من الراتب:</span> <span style="font-weight:bold;">${remain.toLocaleString()} د.ع</span></div>
+                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                    <button class="btn-main" style="background:#ffc107; color:#000; flex:1; font-size:12px; padding:8px;" onclick="openEmpAdjustModal(${index}, 'advance')">💵 سلفة</button>
+                    <button class="btn-main" style="background:#28a745; flex:1; font-size:12px; padding:8px;" onclick="openEmpAdjustModal(${index}, 'bonus')">➕ يومية/إضافي</button>
+                    <button class="btn-main" style="background:#dc3545; flex:1; font-size:12px; padding:8px;" onclick="openEmpAdjustModal(${index}, 'deduction')">➖ خصم غياب</button>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-main" style="background:#0b4a8f; flex:1; font-size:13px;" onclick="settleEmpSalary(${index})">💰 تصفية الراتب</button>
+                    <button class="btn-main" style="background:#17a2b8; flex:1; font-size:13px;" onclick="printEmpStatement(${index})">🖨️ طباعة كشف</button>
+                </div>
+            </div>`; 
         }); 
     }
 
+    function toggleSupStockLink() {
+        let type = document.getElementById("supType").value;
+        let row = document.getElementById("supStockLinkRow");
+        if(row) row.style.display = (type === "فاتورة") ? "flex" : "none";
+    }
+
     function handleSupImage(event) { let file = event.target.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = function(e) { let img = new Image(); img.onload = function() { let canvas = document.createElement("canvas"); let scaleSize = 800 / img.width; canvas.width = 800; canvas.height = img.height * scaleSize; let ctx = canvas.getContext("2d"); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); currentSupImageBase64 = canvas.toDataURL("image/jpeg", 0.6); document.getElementById("supImageBtn").innerText = "✅ تم إرفاق الصورة"; document.getElementById("supImageBtn").style.background = "#28a745"; }; img.src = e.target.result; }; reader.readAsDataURL(file); }
-    function saveSupplierTx() { let name = document.getElementById("supName").value; let type = document.getElementById("supType").value; let amount = parseFloat(document.getElementById("supAmount").value); let note = document.getElementById("supNote").value || "-"; if(!name || isNaN(amount) || amount <= 0) return; suppliers.unshift({ id: Date.now(), name: name, type: type, amount: amount, note: note, date: new Date().toLocaleDateString('en-GB'), image: currentSupImageBase64 }); localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); syncCloud('suppliers', suppliers); document.getElementById("supName").value = ""; document.getElementById("supAmount").value = ""; document.getElementById("supNote").value = ""; currentSupImageBase64 = ""; document.getElementById("supImageBtn").innerText = "📷 إرفاق صورة الوصل"; document.getElementById("supImageBtn").style.background = "#6c757d"; document.getElementById('supImageInput').value = ""; renderSuppliers(); showToast("تم الحفظ!"); }
+    
+    function saveSupplierTx() { 
+        let name = document.getElementById("supName").value.trim(); 
+        let type = document.getElementById("supType").value; 
+        let amount = parseFloat(document.getElementById("supAmount").value); 
+        let note = document.getElementById("supNote").value.trim() || "-"; 
+        let linkedItemName = document.getElementById("supLinkedItem") ? document.getElementById("supLinkedItem").value.trim() : "";
+        let linkedQty = document.getElementById("supLinkedQty") ? (parseFloat(document.getElementById("supLinkedQty").value) || 0) : 0;
+
+        if(!name || isNaN(amount) || amount <= 0) return; 
+
+        if(type === 'فاتورة' && linkedItemName && linkedQty > 0) {
+            let realItem = items.find(i => i.name === linkedItemName);
+            if(realItem) {
+                let st = parseFloat(realItem.stock) || 0;
+                realItem.stock = st + linkedQty;
+                localStorage.setItem('myPricesData', JSON.stringify(items));
+                syncCloud('items', items);
+                logInventory(linkedItemName, "شراء من شركة", linkedQty, `شركة: ${name}`);
+                note = `${note} [مخزن: +${linkedQty} ${linkedItemName}]`;
+                renderItems();
+            } else {
+                alert("⚠️ اسم المادة المربوطة غير موجود في المخزن! تم حفظ الفاتورة المالية فقط.");
+            }
+        }
+
+        suppliers.unshift({ id: Date.now(), name: name, type: type, amount: amount, note: note, date: new Date().toLocaleDateString('en-GB'), image: currentSupImageBase64 }); 
+        localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); 
+        syncCloud('suppliers', suppliers); 
+        
+        document.getElementById("supName").value = ""; 
+        document.getElementById("supAmount").value = ""; 
+        document.getElementById("supNote").value = ""; 
+        if(document.getElementById("supLinkedItem")) document.getElementById("supLinkedItem").value = "";
+        if(document.getElementById("supLinkedQty")) document.getElementById("supLinkedQty").value = "";
+        currentSupImageBase64 = ""; 
+        document.getElementById("supImageBtn").innerText = "📷 إرفاق صورة الوصل"; 
+        document.getElementById("supImageBtn").style.background = "#6c757d"; 
+        document.getElementById('supImageInput').value = ""; 
+        renderSuppliers(); 
+        showToast("تم حفظ عملية الشركة وتحديث الرصيد!"); 
+    }
+    
     function openSupImage(idx) { let tx = suppliers[idx]; if(!tx.image) return; document.getElementById("supImagePreview").src = tx.image; document.getElementById("overlay").style.display = "block"; setTimeout(() => { document.getElementById("supImageModal").classList.add("active"); }, 10); }
-    function renderSuppliers() { const list = document.getElementById("suppliersList"); if(!list) return; list.innerHTML = ""; if(suppliers.length === 0) return; let supNames = [...new Set(suppliers.map(s => s.name))]; let dlist = document.getElementById("supList"); dlist.innerHTML = ""; supNames.forEach(n => dlist.innerHTML += `<option value="${n}">`); let balances = {}; suppliers.forEach(tx => { if(!balances[tx.name]) balances[tx.name] = { bills: 0, pays: 0 }; if(tx.type === 'فاتورة') balances[tx.name].bills += tx.amount; else balances[tx.name].pays += tx.amount; }); let summaryHTML = `<div style="margin-bottom:15px;">`; let totalOwedToAll = 0; for(let sup in balances) { let remain = balances[sup].bills - balances[sup].pays; totalOwedToAll += remain; summaryHTML += `<div class="item-card" style="border-right-color:#fd7e14;"><div class="item-info"><h3>🏢 شركة: ${sup}</h3><p style="color:#dc3545;">فواتير: ${balances[sup].bills.toLocaleString()}</p><p style="color:#28a745;">تسديدات: ${balances[sup].pays.toLocaleString()}</p></div><div class="price-container"><h3 style="color:#fd7e14; margin:0;">المطلوب: ${remain.toLocaleString()}</h3></div></div>`; } summaryHTML += `</div><h3 style="border-top:1px solid #ddd; padding-top:10px;">سجل الحركات الأخير:</h3>`; let txHTML = ""; suppliers.forEach((tx, index) => { let color = tx.type === 'فاتورة' ? '#dc3545' : '#28a745'; let icon = tx.type === 'فاتورة' ? '📥' : '📤'; let imgBtn = tx.image ? `<button class="view-btn" style="background:#6f42c1; padding:4px 8px;" onclick="openSupImage(${index})">🖼️ عرض</button>` : ''; txHTML += `<div class="item-card"><div class="item-info"><h3>${icon} ${tx.name} (${tx.type})</h3><p>ملاحظة: ${tx.note} | التاريخ: ${tx.date}</p></div><div class="price-container"><div class="item-price" style="color:${color};">${tx.amount.toLocaleString()} د.ع</div><div class="actions">${imgBtn}<button class="delete-btn" onclick="deleteSupplierTx(${index})">حذف</button></div></div></div>`; }); list.innerHTML = `<div class="invoice-summary-box" style="border-color:#fd7e14; background:rgba(253, 126, 20, 0.05); text-align:center;"><h3 style="margin:0; color:#fd7e14;">ديون الشركات: ${totalOwedToAll.toLocaleString()} د.ع</h3></div>` + summaryHTML + txHTML; }
+    
+    function renderSuppliers() { 
+        const list = document.getElementById("suppliersList"); if(!list) return; list.innerHTML = ""; 
+        let supFilterEl = document.getElementById("supFilterSelect");
+        let printSupBtn = document.getElementById("btnPrintSupStatement");
+        let selectedSup = supFilterEl ? supFilterEl.value : "الكل";
+
+        if(suppliers.length === 0) {
+            if(printSupBtn) printSupBtn.style.display = "none";
+            return; 
+        }
+
+        let supNames = [...new Set(suppliers.map(s => s.name))]; 
+        let dlist = document.getElementById("supList"); dlist.innerHTML = ""; supNames.forEach(n => dlist.innerHTML += `<option value="${n}">`); 
+
+        if(supFilterEl) {
+            supFilterEl.innerHTML = '<option value="الكل">عرض جميع الشركات والمجهزين</option>';
+            supNames.forEach(n => supFilterEl.innerHTML += `<option value="${n}">${n}</option>`);
+            supFilterEl.value = supNames.includes(selectedSup) ? selectedSup : "الكل";
+            selectedSup = supFilterEl.value;
+        }
+        if(printSupBtn) {
+            printSupBtn.style.display = (selectedSup !== "الكل") ? "inline-block" : "none";
+        }
+
+        let balances = {}; 
+        suppliers.forEach(tx => { 
+            if(selectedSup !== "الكل" && tx.name !== selectedSup) return;
+            if(!balances[tx.name]) balances[tx.name] = { bills: 0, pays: 0 }; 
+            if(tx.type === 'فاتورة') balances[tx.name].bills += tx.amount; 
+            else balances[tx.name].pays += tx.amount; 
+        }); 
+
+        let summaryHTML = `<div style="margin-bottom:15px;">`; 
+        let totalOwedToAll = 0; 
+        for(let sup in balances) { 
+            let remain = balances[sup].bills - balances[sup].pays; 
+            totalOwedToAll += remain; 
+            summaryHTML += `<div class="item-card" style="border-right-color:#fd7e14;"><div class="item-info"><h3>🏢 شركة: ${sup}</h3><p style="color:#dc3545;">فواتير: ${balances[sup].bills.toLocaleString()}</p><p style="color:#28a745;">تسديدات: ${balances[sup].pays.toLocaleString()}</p></div><div class="price-container"><h3 style="color:#fd7e14; margin:0;">المطلوب: ${remain.toLocaleString()}</h3></div></div>`; 
+        } 
+        summaryHTML += `</div><h3 style="border-top:1px solid #ddd; padding-top:10px;">سجل الحركات ${selectedSup !== 'الكل' ? '(' + selectedSup + ')' : 'الأخير'}:</h3>`; 
+        
+        let txHTML = ""; 
+        suppliers.forEach((tx, index) => { 
+            if(selectedSup !== "الكل" && tx.name !== selectedSup) return;
+            let color = tx.type === 'فاتورة' ? '#dc3545' : '#28a745'; 
+            let icon = tx.type === 'فاتورة' ? '📥' : '📤'; 
+            let imgBtn = tx.image ? `<button class="view-btn" style="background:#6f42c1; padding:4px 8px;" onclick="openSupImage(${index})">🖼️ عرض</button>` : ''; 
+            txHTML += `<div class="item-card"><div class="item-info"><h3>${icon} ${tx.name} (${tx.type})</h3><p>ملاحظة: ${tx.note} | التاريخ: ${tx.date}</p></div><div class="price-container"><div class="item-price" style="color:${color};">${tx.amount.toLocaleString()} د.ع</div><div class="actions">${imgBtn}<button class="delete-btn" onclick="deleteSupplierTx(${index})">حذف</button></div></div></div>`; 
+        }); 
+        
+        let boxTitle = selectedSup !== "الكل" ? `المطلوب لشركة (${selectedSup})` : `إجمالي ديون جميع الشركات`;
+        list.innerHTML = `<div class="invoice-summary-box" style="border-color:#fd7e14; background:rgba(253, 126, 20, 0.05); text-align:center;"><h3 style="margin:0; color:#fd7e14;">${boxTitle}: ${formatDualAmountHTML(totalOwedToAll)}</h3></div>` + summaryHTML + txHTML; 
+    }
+
+    function printSupplierStatement() {
+        let selectedSup = document.getElementById("supFilterSelect").value;
+        if(!selectedSup || selectedSup === "الكل") return;
+
+        let txs = suppliers.filter(tx => tx.name === selectedSup).reverse();
+        let totalBills = 0, totalPays = 0, rows = '', counter = 1;
+
+        txs.forEach(tx => {
+            if(tx.type === 'فاتورة') totalBills += tx.amount;
+            else totalPays += tx.amount;
+            let color = tx.type === 'فاتورة' ? '#dc3545' : '#28a745';
+            rows += `<tr><td>${counter++}</td><td>${tx.date}</td><td>${tx.type}</td><td>${tx.note}</td><td style="color:${color}; font-weight:bold;">${tx.amount.toLocaleString()} د.ع</td></tr>`;
+        });
+
+        let remain = totalBills - totalPays;
+        let stampHTML = settings.stampImage ? `<br><img src="${settings.stampImage}" style="max-height:60px;">` : `<br><br>.........................`;
+
+        let printHTML = `
+            <div class="print-header">
+                <div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span></div>
+                <div class="print-titles"><h1 class="main-title">فــــؤاد</h1><p class="sub-title1">للديكورات الداخلية والخارجية</p></div>
+            </div>
+            <div class="invoice-type-banner" style="background-color:#fd7e14;">كشف حساب شركة / مجهز تفصيلي</div>
+            <div class="cust-info-row">
+                <span style="flex:1;">اسم الشركة / المجهز: <span class="dotted-line">${selectedSup}</span></span>
+                <span>تاريخ الطباعة: <span class="dotted-line">${new Date().toLocaleDateString('en-GB')}</span></span>
+            </div>
+            <table class="print-table">
+                <thead><tr><th>ت</th><th>التاريخ</th><th>نوع الحركة</th><th>التفاصيل / رقم القائمة</th><th class="th-total">المبلغ</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <div class="print-summary-box" style="width:100%; margin-top:20px;">
+                <div class="print-summary-row row-blue"><div class="print-summary-label">إجمالي الفواتير المشتراة:</div><div class="print-summary-val">${formatDualAmountHTML(totalBills, true)}</div></div>
+                <div class="print-summary-row row-blue"><div class="print-summary-label">إجمالي الحوالات والتسديدات:</div><div class="print-summary-val">${formatDualAmountHTML(totalPays, true)}</div></div>
+                <div class="print-summary-row row-red"><div class="print-summary-label">المتبقي المطلوب للشركة:</div><div class="print-summary-val">${formatDualAmountHTML(remain, true)}</div></div>
+            </div>
+            <div class="print-footer" style="margin-top:40px;">
+                <div class="signatures" style="width:100%; display:flex; justify-content:space-around; align-items:center;">
+                    <div>توقيع المحاسب / الختم${stampHTML}</div>
+                    <div>توقيع مندوب الشركة<br><br>.........................</div>
+                </div>
+            </div>
+        `;
+        document.getElementById("supplierPrintSection").innerHTML = printHTML;
+        triggerPrintSection("supplierPrintSection");
+    }
+
     function deleteSupplierTx(index) { if(confirm("تأكيد حذف الحركة؟")) { suppliers.splice(index, 1); localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); syncCloud('suppliers', suppliers); renderSuppliers(); showToast("تم الحذف"); } }
 
     function saveExpense() { let name = document.getElementById("expName").value; let amount = parseFloat(document.getElementById("expAmount").value); let category = document.getElementById("expCategory").value; if(!name || isNaN(amount) || amount <= 0) return; expenses.unshift({ id: Date.now(), name: name, category: category, amount: amount, date: new Date().toLocaleDateString('en-GB') }); localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses); document.getElementById("expName").value = ""; document.getElementById("expAmount").value = ""; renderExpenses(); showToast("تم تسجيل المصروف!"); }
@@ -1170,6 +1514,7 @@
         if(expenses.length === 0) return; 
         let totalExp = 0; let expHTML = ""; 
         expenses.forEach((exp, index) => { 
+            if(exp.noteOnly) return;
             totalExp += exp.amount; 
             let catBadge = exp.category ? `<span class="badge badge-purple">${exp.category}</span>` : ''; 
             let delBtn = currentRole === 'admin' ? `<button class="delete-btn" onclick="deleteExpense(${index})">حذف</button>` : '';
@@ -1196,6 +1541,7 @@
     function renderStats() {
         let totalSales = 0; let totalPaid = 0; let totalDebts = 0; let totalExp = 0; let totalSupDebts = 0; let totalDiscounts = 0; let totalGrossProfit = 0;
         let monthFilter = document.getElementById("statsMonthFilter").value; let catFilter = document.getElementById("statsCategoryFilter").value; let catStats = {}; 
+        let execStats = {};
         
         archive.forEach(inv => {
             if(inv.type === 'تخمين') return; 
@@ -1204,6 +1550,13 @@
             let isReturn = (inv.type === 'راجع'); let multiplier = isReturn ? -1 : 1;
             let invSubTotal = parseFloat(inv.subTotal) || (parseFloat(inv.total) + parseFloat(inv.discount)) || 1; if (invSubTotal <= 0) invSubTotal = 1;
             let catSalesInInv = 0; let catProfitInInv = 0;
+
+            let exName = (inv.executor || "").trim();
+            if(exName !== "" && catFilter === 'الكل') {
+                if(!execStats[exName]) execStats[exName] = { count: 0, sales: 0 };
+                execStats[exName].count += isReturn ? 0 : 1;
+                execStats[exName].sales += (parseFloat(inv.total) || 0) * multiplier;
+            }
             
             if(inv.items && Array.isArray(inv.items)) {
                 inv.items.forEach(itm => {
@@ -1234,17 +1587,17 @@
         });
         
         if (catFilter === 'الكل') { 
-            expenses.forEach(exp => { let expDateObj = parseDateGB(exp.date); if(monthFilter && expDateObj) { let expMonthStr = expDateObj.getFullYear() + "-" + String(expDateObj.getMonth() + 1).padStart(2, '0'); if(expMonthStr !== monthFilter) return; } totalExp += (parseFloat(exp.amount) || 0); });
+            expenses.forEach(exp => { if(exp.noteOnly) return; let expDateObj = parseDateGB(exp.date); if(monthFilter && expDateObj) { let expMonthStr = expDateObj.getFullYear() + "-" + String(expDateObj.getMonth() + 1).padStart(2, '0'); if(expMonthStr !== monthFilter) return; } totalExp += (parseFloat(exp.amount) || 0); });
             suppliers.forEach(tx => { let txDateObj = parseDateGB(tx.date); if(monthFilter && txDateObj) { let txMonthStr = txDateObj.getFullYear() + "-" + String(txDateObj.getMonth() + 1).padStart(2, '0'); if(txMonthStr !== monthFilter) return; } if(tx.type === 'فاتورة') totalSupDebts += tx.amount; else totalSupDebts -= tx.amount; });
         } else { totalExp = 0; totalSupDebts = 0; }
         
         let netProfit = totalGrossProfit - totalDiscounts - totalExp; 
-        document.getElementById("stTotalSales").innerText = totalSales.toLocaleString() + " د.ع"; 
-        document.getElementById("stTotalPaid").innerText = totalPaid.toLocaleString() + " د.ع"; 
-        document.getElementById("stTotalDebts").innerText = totalDebts.toLocaleString() + " د.ع"; 
-        document.getElementById("stTotalExp").innerText = totalExp.toLocaleString() + " د.ع"; 
-        document.getElementById("stTotalSupDebts").innerText = totalSupDebts.toLocaleString() + " د.ع"; 
-        document.getElementById("stNetProfit").innerText = netProfit.toLocaleString() + " د.ع";
+        document.getElementById("stTotalSales").innerHTML = formatDualAmountHTML(totalSales); 
+        document.getElementById("stTotalPaid").innerHTML = formatDualAmountHTML(totalPaid); 
+        document.getElementById("stTotalDebts").innerHTML = formatDualAmountHTML(totalDebts); 
+        document.getElementById("stTotalExp").innerHTML = formatDualAmountHTML(totalExp); 
+        document.getElementById("stTotalSupDebts").innerHTML = formatDualAmountHTML(totalSupDebts); 
+        document.getElementById("stNetProfit").innerHTML = formatDualAmountHTML(netProfit);
         
         let catHtml = `<tr><th>القسم</th><th>الكمية المباعة</th><th>إجمالي المبيعات</th><th style="color:#28a745;">صافي الربح</th></tr>`;
         for(let cat in catStats) { 
@@ -1254,6 +1607,20 @@
         }
         catHtml += `<tr style="background-color: rgba(40,167,69,0.1);"><th colspan="3" style="text-align:left;">إجمالي أرباح الأقسام المعروضة:</th><th style="color:#28a745; font-size:16px;">${totalGrossProfit.toLocaleString()} د.ع</th></tr>`;
         document.getElementById("categoryStatsTable").innerHTML = catHtml;
+
+        let execTable = document.getElementById("executorsStatsTable");
+        if(execTable) {
+            let exKeys = Object.keys(execStats).sort((a, b) => execStats[b].sales - execStats[a].sales);
+            if(exKeys.length === 0) {
+                execTable.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--sub-text);">لا توجد وصولات مسجلة باسم منفذ عمل في هذه الفترة.</td></tr>`;
+            } else {
+                let exHtml = `<tr><th>اسم منفذ العمل (الخلفة)</th><th>عدد القوائم</th><th>إجمالي قيمة المسحوبات</th></tr>`;
+                exKeys.forEach(ex => {
+                    exHtml += `<tr><td style="font-weight:bold; color:#0b4a8f;">👷 ${ex}</td><td>${execStats[ex].count}</td><td style="font-weight:bold; color:#28a745;">${execStats[ex].sales.toLocaleString()} د.ع</td></tr>`;
+                });
+                execTable.innerHTML = exHtml;
+            }
+        }
     }
 
     function printStats() {
@@ -1298,6 +1665,7 @@
             executor: document.getElementById("executorName").value,
             address: document.getElementById("customerAddress").value,
             phone: document.getElementById("customerPhone").value,
+            note: document.getElementById("invoiceNote") ? document.getElementById("invoiceNote").value : "",
             type: document.getElementById("invoiceType").value,
             discount: document.getElementById("discountAmount").value,
             paid: document.getElementById("paidAmount").value,
@@ -1305,7 +1673,9 @@
             items: [...currentInvoiceItems],
             editingArchiveId: currentTab.editingArchiveId || null,
             origInvNo: currentTab.origInvNo || null,
-            origDate: currentTab.origDate || null
+            origDate: currentTab.origDate || null,
+            savedUsdRate: currentTab.savedUsdRate || null,
+            savedCurrencyMode: currentTab.savedCurrencyMode || null
         };
         saveTabsState();
     }
@@ -1317,6 +1687,7 @@
         document.getElementById("executorName").value = draft.executor || "";
         document.getElementById("customerAddress").value = draft.address || "";
         document.getElementById("customerPhone").value = draft.phone || "";
+        if(document.getElementById("invoiceNote")) document.getElementById("invoiceNote").value = draft.note || "";
         document.getElementById("invoiceType").value = draft.type || "مبيع";
         document.getElementById("discountAmount").value = draft.discount || 0;
         document.getElementById("paidAmount").value = draft.paid !== undefined ? draft.paid : "";
@@ -1338,6 +1709,7 @@
         
         saveTabsState();
         renderInvoiceTabs();
+        checkCustomerDebtLimit(false);
         renderInvoiceDetails();
         calculateTotals();
     }
@@ -1388,6 +1760,41 @@
         renderInvoiceTabs();
     }
 
+    let lastWarnedCustomer = "";
+    function checkCustomerDebtLimit(withSound = true) {
+        let alertBox = document.getElementById("debtLimitAlert");
+        if(!alertBox) return;
+        if(viewModeInvoice) {
+            alertBox.style.display = "none";
+            return;
+        }
+        let cName = document.getElementById("customerName").value.trim();
+        let limit = parseFloat(settings.debtLimit) || 0;
+        if(!cName || limit <= 0) {
+            alertBox.style.display = "none";
+            lastWarnedCustomer = "";
+            return;
+        }
+        let debt = getCustomerTotalDebt(cName);
+        if(debt >= limit) {
+            alertBox.innerHTML = `🚨 تنبيه سقف الدين: الزبون (${cName}) بذمته ديون سابقة بقيمة ${debt.toLocaleString()} د.ع (تجاوز الحد المسموح ${limit.toLocaleString()} د.ع)!`;
+            alertBox.style.display = "block";
+            if(withSound && lastWarnedCustomer !== cName) {
+                playWarningBeep();
+                lastWarnedCustomer = cName;
+            }
+        } else {
+            alertBox.style.display = "none";
+            lastWarnedCustomer = "";
+        }
+    }
+
+    function onCustomerNameInput() {
+        checkCustomerDebtLimit(true);
+        renderInvoiceDetails();
+        updateTabTitle();
+    }
+
     function suspendInvoice() {
         if(currentInvoiceItems.length === 0) { alert("الوصل فارغ!"); return; }
         let obj = { 
@@ -1397,6 +1804,7 @@
             phone: document.getElementById("customerPhone").value, 
             address: document.getElementById("customerAddress").value, 
             executor: document.getElementById("executorName").value, 
+            note: document.getElementById("invoiceNote") ? document.getElementById("invoiceNote").value : "",
             discount: document.getElementById("discountAmount").value, 
             paid: document.getElementById("paidAmount").value, 
             deliveryFee: document.getElementById("deliveryFee").value, 
@@ -1440,6 +1848,7 @@
                 executor: inv.executor || "",
                 address: inv.address || "",
                 phone: inv.phone || "",
+                note: inv.note || "",
                 type: inv.type || "مبيع",
                 discount: inv.discount || 0,
                 paid: inv.paid || "",
@@ -1447,7 +1856,9 @@
                 items: JSON.parse(JSON.stringify(inv.items)),
                 editingArchiveId: null,
                 origInvNo: null,
-                origDate: null
+                origDate: null,
+                savedUsdRate: null,
+                savedCurrencyMode: null
             };
             
             invoiceTabs.push(newDraft);
@@ -1503,6 +1914,7 @@
 
         let cName = document.getElementById("customerName").value.trim() || "زبون نقدي";
         let prevDebt = getCustomerTotalDebt(cName);
+        let invNoteVal = document.getElementById("invoiceNote") ? document.getElementById("invoiceNote").value.trim() : "";
         
         let discountAmount = parseFloat(document.getElementById("discountAmount").value) || 0; 
         let deliveryFee = parseFloat(document.getElementById("deliveryFee").value) || 0; 
@@ -1514,7 +1926,7 @@
         let currentInvPaid = paidAmount;
         let autoPaymentsDone = false;
 
-        if (existingIdx === -1 && invType !== 'تخمين' && paidAmount > netTotal && prevDebt > 0) {
+        if (invType !== 'تخمين' && invType !== 'راجع' && paidAmount > netTotal && prevDebt > 0) {
             let excessPayment = paidAmount - netTotal;
             invoiceRemaining = 0; 
             currentInvPaid = netTotal; 
@@ -1522,12 +1934,14 @@
             for (let i = archive.length - 1; i >= 0; i--) {
                 if(excessPayment <= 0) break;
                 let oldInv = archive[i];
-                if (oldInv.customer === cName && oldInv.type !== 'تخمين' && oldInv.remaining > 0) {
-                    let toPay = Math.min(excessPayment, oldInv.remaining);
-                    oldInv.remaining -= toPay;
+                if(editingId && oldInv.id === editingId) continue;
+                if ((oldInv.customer || "").trim() === cName && oldInv.type !== 'تخمين' && (parseFloat(oldInv.remaining) || 0) > 0) {
+                    let rem = parseFloat(oldInv.remaining) || 0;
+                    let toPay = Math.min(excessPayment, rem);
+                    oldInv.remaining = rem - toPay;
                     oldInv.paid = (parseFloat(oldInv.paid) || 0) + toPay;
                     if(!oldInv.payments) oldInv.payments = [];
-                    oldInv.payments.push({ date: new Date().toLocaleDateString('en-GB'), amount: toPay, note: 'تسديد تلقائي من قائمة جديدة' });
+                    oldInv.payments.push({ date: new Date().toLocaleDateString('en-GB'), amount: toPay, note: 'تسديد تلقائي من قائمة جديدة/معدلة' });
                     excessPayment -= toPay;
                     autoPaymentsDone = true;
                 }
@@ -1587,6 +2001,7 @@
                 executor: document.getElementById("executorName").value || "",
                 phone: document.getElementById("customerPhone").value || "",
                 address: document.getElementById("customerAddress").value || "",
+                note: invNoteVal,
                 total: netTotal,
                 subTotal: currentInvoiceTotal,
                 previousDebt: prevDebt,
@@ -1596,12 +2011,14 @@
                 remaining: invoiceRemaining,
                 items: safeItems,
                 type: invType,
-                payments: updatedPayments
+                payments: updatedPayments,
+                usdRate: oldInv.usdRate || settings.usdRate,
+                currencyMode: oldInv.currencyMode || settings.currencyMode
             };
 
             localStorage.setItem('myArchiveData', JSON.stringify(archive)); 
             syncCloud('archive', archive); 
-            showToast("✅ تم حفظ التعديلات على الوصل بنجاح محلياً وسحابياً!");
+            showToast(autoPaymentsDone ? "✅ تم حفظ التعديلات وتسديد الديون السابقة تلقائياً!" : "✅ تم حفظ التعديلات على الوصل بنجاح!");
 
             closeTab(activeTabIndex); 
             updateCustomerDropdown(); 
@@ -1624,6 +2041,7 @@
             executor: document.getElementById("executorName").value || "", 
             phone: document.getElementById("customerPhone").value || "", 
             address: document.getElementById("customerAddress").value || "", 
+            note: invNoteVal,
             total: netTotal, 
             subTotal: currentInvoiceTotal, 
             previousDebt: prevDebt, 
@@ -1633,13 +2051,15 @@
             remaining: invoiceRemaining, 
             items: safeItems, 
             type: invType, 
-            payments: initialPayments 
+            payments: initialPayments,
+            usdRate: settings.usdRate,
+            currencyMode: settings.currencyMode
         };  
 
         if(invType !== 'تخمين') {
             safeItems.forEach(invItm => {
                 let realItem = items.find(i => i.name === invItm.name);
-                if(realItem) { 
+                if(realItem && realItem.stock !== undefined && realItem.stock !== "") { 
                     let st = parseFloat(realItem.stock) || 0; let qty = parseFloat(invItm.qty) || 0;
                     if(invType === 'راجع') { realItem.stock = st + qty; logInventory(invItm.name, "راجع", qty, `وصل رقم ${genInvNo}`); } 
                     else { realItem.stock = st - qty; logInventory(invItm.name, "مبيع", -qty, `وصل رقم ${genInvNo}`); }
@@ -1653,7 +2073,7 @@
         localStorage.setItem('myArchiveData', JSON.stringify(archive)); 
         syncCloud('archive', archive); 
         
-        if(autoPaymentsDone) showToast("💾 تم الحفظ بوضع الطوارئ، وتسديد الديون السابقة تلقائياً!");
+        if(autoPaymentsDone) showToast("💾 تم الحفظ، وتسديد الديون السابقة تلقائياً!");
         else showToast("💾 تم الحفظ بنجاح!"); 
         
         closeTab(activeTabIndex); 
@@ -1675,17 +2095,20 @@
                 else if(inv.type === 'جملة') typeBadge = `<span class="badge badge-wholesale">قائمة جملة</span>`; 
                 else if(inv.type === 'تخمين') typeBadge = `<span class="badge" style="background:#ffc107; color:#000;">قائمة تخمين</span>`;
                 
+                let invRate = inv.usdRate || settings.usdRate;
+                let invMode = inv.currencyMode || settings.currencyMode;
                 let remainingVal = parseFloat(inv.remaining) || 0; 
                 let statusBadge = '';
                 
                 if(inv.type !== 'تخمين') {
-                    if (remainingVal > 0) statusBadge = `<span class="badge badge-red">مطلوب لهذه القائمة: ${remainingVal.toLocaleString()} د.ع</span>`;
-                    else if (remainingVal < 0) statusBadge = `<span class="badge badge-green">رصيد دائن للزبون: ${Math.abs(remainingVal).toLocaleString()} د.ع</span>`;
+                    if (remainingVal > 0) statusBadge = `<span class="badge badge-red">مطلوب لهذه القائمة: ${formatDualAmountText(remainingVal, invRate, invMode)}</span>`;
+                    else if (remainingVal < 0) statusBadge = `<span class="badge badge-green">رصيد دائن للزبون: ${formatDualAmountText(Math.abs(remainingVal), invRate, invMode)}</span>`;
                     else statusBadge = `<span class="badge badge-green">مسددة بالكامل</span>`;
                 }
                 
+                let noteLine = inv.note ? `<p style="color:#0b4a8f; font-size:12px; margin-top:3px;">📝 ${inv.note}</p>` : '';
                 let delBtn = currentRole === 'admin' ? `<button class="delete-btn" onclick="deleteArchive(${index})">حذف</button>` : '';
-                list.innerHTML += `<div class="item-card"><div class="item-info"><h3>${inv.customer} ${typeBadge}</h3><p>رقم: ${inv.invNo} | التاريخ: ${inv.date}</p><p>المطلوب: ${(parseFloat(inv.total)||0).toLocaleString()} د.ع</p><p style="margin-top:5px;">${statusBadge}</p></div><div class="actions" style="flex-direction:column;"><button class="view-btn btn-main" onclick="viewArchiveInvoice(${index})">عـرض الوصل</button><button class="edit-btn btn-main" onclick="editArchiveInvoice(${index})">✏️ تعديل الوصل</button>${delBtn}</div></div>`;  
+                list.innerHTML += `<div class="item-card"><div class="item-info"><h3>${inv.customer} ${typeBadge}</h3><p>رقم: ${inv.invNo} | التاريخ: ${inv.date}</p><p>المطلوب: ${formatDualAmountHTML(inv.total, false, invRate, invMode)}</p>${noteLine}<p style="margin-top:5px;">${statusBadge}</p></div><div class="actions" style="flex-direction:column;"><button class="view-btn btn-main" onclick="viewArchiveInvoice(${index})">عـرض الوصل</button><button class="edit-btn btn-main" onclick="editArchiveInvoice(${index})">✏️ تعديل الوصل</button>${delBtn}</div></div>`;  
             }  
         });  
     }  
@@ -1705,6 +2128,7 @@
                     executor: inv.executor || "",
                     address: inv.address || "",
                     phone: inv.phone || "",
+                    note: inv.note || "",
                     type: inv.type || "مبيع",
                     discount: inv.discount || 0,
                     paid: inv.paid !== undefined ? inv.paid : "",
@@ -1712,7 +2136,9 @@
                     items: JSON.parse(JSON.stringify(inv.items || [])),
                     editingArchiveId: inv.id,
                     origInvNo: inv.invNo,
-                    origDate: inv.date
+                    origDate: inv.date,
+                    savedUsdRate: inv.usdRate || null,
+                    savedCurrencyMode: inv.currencyMode || null
                 };
                 if (invoiceTabs.length === 1 && invoiceTabs[0].items.length === 0 && !invoiceTabs[0].customer && !invoiceTabs[0].editingArchiveId) {
                     invoiceTabs[0] = editDraft;
@@ -1741,14 +2167,40 @@
 
     function deleteArchive(index) { 
         if(currentRole !== 'admin') return alert("صلاحية الإدارة فقط!");
-        if(confirm("تأكيد حذف الوصل نهائياً؟")) { 
+        let inv = archive[index];
+        if(!inv) return;
+        if(confirm("تأكيد حذف الوصل نهائياً وإرجاع مواده للمخزن؟")) { 
+            if(inv.type !== 'تخمين' && inv.items && Array.isArray(inv.items)) {
+                let stockChanged = false;
+                inv.items.forEach(invItm => {
+                    let realItem = items.find(i => i.name === invItm.name);
+                    if(realItem && realItem.stock !== undefined && realItem.stock !== "") {
+                        let st = parseFloat(realItem.stock) || 0;
+                        let qty = parseFloat(invItm.qty) || 0;
+                        if(inv.type === 'راجع') {
+                            realItem.stock = st - qty;
+                            logInventory(invItm.name, "حذف وصل (راجع)", -qty, `حذف وصل رقم ${inv.invNo}`);
+                        } else {
+                            realItem.stock = st + qty;
+                            logInventory(invItm.name, "حذف وصل (إرجاع للمخزن)", qty, `حذف وصل رقم ${inv.invNo}`);
+                        }
+                        stockChanged = true;
+                    }
+                });
+                if(stockChanged) {
+                    localStorage.setItem('myPricesData', JSON.stringify(items));
+                    syncCloud('items', items);
+                    renderItems();
+                }
+            }
+
             archive.splice(index, 1); 
             localStorage.setItem('myArchiveData', JSON.stringify(archive)); 
             syncCloud('archive', archive); 
             renderArchive(); 
             renderDebts(); 
             updateCustomerDropdown(); 
-            showToast("تم حذف الوصل!"); 
+            showToast("✅ تم حذف الوصل وإرجاع كمياته للمخزن!"); 
         } 
     }  
 
@@ -1769,7 +2221,7 @@
     }
 
     function remindCustomerTotalDebt(custName, phone, totalRem) {
-        let text = `مرحباً الأخ العزيز ${custName}،\nللتذكير: يرجى تسديد إجمالي الرصيد المتبقي في حسابكم لدى فؤاد الچليباوي للديكورات\nالبالغ: *${parseFloat(totalRem).toLocaleString()} د.ع*\nشكراً جزيلاً لتعاونكم.`;
+        let text = `مرحباً الأخ العزيز ${custName}،\nللتذكير: يرجى تسديد إجمالي الرصيد المتبقي في حسابكم لدى فؤاد الچليباوي للديكورات\nالبالغ: *${formatDualAmountText(totalRem)}*\nشكراً جزيلاً لتعاونكم.`;
         let formattedPhone = formatIraqiWhatsApp(phone || "");
         let url = formattedPhone ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
         window.open(url, '_blank');
@@ -1817,7 +2269,7 @@
 
         let summaryBox = `
             <div class="invoice-summary-box" style="border-color:#dc3545; background:rgba(220,53,69,0.05); text-align:center;">
-                <h3 style="margin:0 0 6px 0; color:#dc3545;">إجمالي الديون في السوق: ${totalDebts.toLocaleString()} د.ع</h3>
+                <h3 style="margin:0 0 6px 0; color:#dc3545;">إجمالي الديون في السوق: ${formatDualAmountHTML(totalDebts)}</h3>
                 <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; font-size:12px;">
                     <span class="badge badge-stock">عدد الوصولات: ${debtEntries.length}</span>
                     ${overdueCount > 0 ? `<span class="badge badge-red">⚠️ متأخرة (+30 يوم): ${overdueCount}</span>` : `<span class="badge badge-green">👍 لا توجد ديون متأخرة جداً</span>`}
@@ -1853,7 +2305,7 @@
                         <div class="item-info">
                             <h3>👤 ${g.name} ${ageBadge}</h3>
                             <p>عدد الوصولات غير المسددة: <b>${g.count}</b> ${g.lastPayDate ? `| آخر تسديد: ${g.lastPayDate}` : ''}</p>
-                            <h4 style="color:#dc3545; margin:6px 0 0 0; font-size:16px;">إجمالي المطلوب بذمته: ${g.totalRem.toLocaleString()} د.ع</h4>
+                            <h4 style="color:#dc3545; margin:6px 0 0 0; font-size:16px;">إجمالي المطلوب بذمته: ${formatDualAmountHTML(g.totalRem)}</h4>
                         </div>
                         <div class="actions" style="flex-direction:column; min-width:125px;">
                             <button class="pay-btn" style="width:100%;" onclick="openGeneralPayForCustomer('${safeCust}')">💵 تسديد دفعة</button>
@@ -1897,7 +2349,7 @@
                         <p>رقم الوصل: ${inv.invNo} | التاريخ: ${inv.date}</p>
                         <p>المطلوب: ${e.tot.toLocaleString()} | الواصل: ${e.paid.toLocaleString()}</p>
                         ${lastPayText}
-                        <h4 style="color:#dc3545; margin:5px 0 0 0;">المتبقي: ${e.rem.toLocaleString()} د.ع</h4>
+                        <h4 style="color:#dc3545; margin:5px 0 0 0;">المتبقي: ${formatDualAmountHTML(e.rem)}</h4>
                     </div>
                     <div class="actions" style="flex-direction:column;">
                         <div style="display:flex; gap:5px; width:100%;">
@@ -1912,7 +2364,7 @@
         list.innerHTML = summaryBox + debtsHTML;  
     }
 
-    function openPayModal(archiveIndex) { let inv = archive[archiveIndex]; let rem = parseFloat(inv.remaining) || 0; document.getElementById("payArchiveIndex").value = archiveIndex; document.getElementById("payAmountInput").value = ""; document.getElementById("payModalInfo").innerText = `المطلوب: ${rem.toLocaleString()} د.ع`; document.getElementById("overlay").style.display = "block"; setTimeout(() => { document.getElementById("payModal").classList.add("active"); }, 10); }  
+    function openPayModal(archiveIndex) { let inv = archive[archiveIndex]; let rem = parseFloat(inv.remaining) || 0; document.getElementById("payArchiveIndex").value = archiveIndex; document.getElementById("payAmountInput").value = ""; document.getElementById("payModalInfo").innerHTML = `المطلوب: ${formatDualAmountHTML(rem)}`; document.getElementById("overlay").style.display = "block"; setTimeout(() => { document.getElementById("payModal").classList.add("active"); }, 10); }  
     function payInFull() { let idx = parseInt(document.getElementById("payArchiveIndex").value); let rem = parseFloat(archive[idx].remaining) || 0; document.getElementById("payAmountInput").value = rem; confirmPayment(); }  
     
     function confirmPayment() { 
@@ -1942,7 +2394,7 @@
         localStorage.setItem('myArchiveData', JSON.stringify(archive)); 
         syncCloud('archive', archive); 
         closeModals(); 
-        showToast("✅ تم تسديد الدفعة بنجاح ومحلياً!"); 
+        showToast("✅ تم تسديد الدفعة بنجاح!"); 
         renderDebts(); 
         renderArchive(); 
         if(document.getElementById("view-statement").classList.contains("active")) renderStatement();
@@ -1959,7 +2411,7 @@
                 let note = p.note ? `<br><span style="font-size:10px; color:#555;">${p.note}</span>` : ''; 
                 html += `<tr>
                             <td style="font-size:15px;">${p.date}</td>
-                            <td style="color:#28a745; font-weight:bold; font-size:15px;">${parseFloat(p.amount).toLocaleString()} د.ع ${note}</td>
+                            <td style="color:#28a745; font-weight:bold; font-size:15px;">${formatDualAmountHTML(p.amount)} ${note}</td>
                             <td><button class="btn-main" style="background:#17a2b8; padding:4px 8px; font-size:12px; margin:0;" onclick="printReceiptVoucher(${idx}, ${pIndex})">🖨️ طباعة PDF</button></td>
                         </tr>`; 
             }); 
@@ -1998,14 +2450,14 @@
                 
                 <div style="background-color: rgba(40, 167, 69, 0.1); border: 2px solid #28a745; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
                     <span style="font-size: 20px;">مبلغاً وقدره:</span><br>
-                    <span style="font-size: 35px; color: #28a745; font-weight: bold;">${parseFloat(payment.amount).toLocaleString()} د.ع</span>
+                    <span style="font-size: 32px; color: #28a745; font-weight: bold;">${formatDualAmountText(payment.amount)}</span>
                 </div>
                 
                 <p style="margin: 10px 0;"><strong>وذلك عن:</strong> تسديد دفعة من الحساب.</p>
                 ${payment.note ? `<p style="margin: 10px 0;"><strong>ملاحظة:</strong> ${payment.note}</p>` : ''}
                 
                 <div style="display:flex; justify-content:space-between; margin-top: 20px; border-top: 2px dotted #ccc; padding-top: 15px;">
-                    <span style="color:#dc3545; font-weight:bold;">المتبقي الكلي بذمته حالياً: ${currentRemaining.toLocaleString()} د.ع</span>
+                    <span style="color:#dc3545; font-weight:bold;">المتبقي الكلي بذمته حالياً: ${formatDualAmountText(currentRemaining)}</span>
                 </div>
             </div>
             
@@ -2045,7 +2497,7 @@
     function updateGenPayDebtInfo() {
         let cName = document.getElementById("genPayCustomer").value.trim();
         let totalDebt = getCustomerTotalDebt(cName);
-        document.getElementById("genPayDebtDisplay").innerText = `إجمالي المطلوب بذمته: ${totalDebt.toLocaleString()} د.ع`;
+        document.getElementById("genPayDebtDisplay").innerHTML = `إجمالي المطلوب بذمته: ${formatDualAmountHTML(totalDebt)}`;
     }
 
     function confirmGeneralPayment() {
@@ -2111,7 +2563,7 @@
         localStorage.setItem('myArchiveData', JSON.stringify(archive));
         syncCloud('archive', archive);
         closeModals();
-        showToast("✅ تم تسديد القوائم وحفظ الدفعة بنجاح محلياً وسحابياً!");
+        showToast("✅ تم تسديد القوائم وحفظ الدفعة بنجاح!");
         renderDebts();
         renderArchive();
         if(document.getElementById("view-statement").classList.contains("active")) renderStatement();
@@ -2148,13 +2600,13 @@
                 
                 <div style="background-color: rgba(40, 167, 69, 0.1); border: 2px solid #28a745; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
                     <span style="font-size: 20px;">المبلغ المقبوض نقداً:</span><br>
-                    <span style="font-size: 35px; color: #28a745; font-weight: bold;">${amount.toLocaleString()} د.ع</span>
+                    <span style="font-size: 32px; color: #28a745; font-weight: bold;">${formatDualAmountText(amount)}</span>
                 </div>
                 
                 <p style="margin: 10px 0;"><strong>وذلك عن:</strong> ${note}</p>
                 
                 <div style="display:flex; justify-content:space-between; margin-top: 20px; border-top: 2px dotted #ccc; padding-top: 15px;">
-                    <span style="color:#dc3545; font-weight:bold;">المتبقي الكلي بذمته بعد هذا التسديد: ${currentRemaining.toLocaleString()} د.ع</span>
+                    <span style="color:#dc3545; font-weight:bold;">المتبقي الكلي بذمته بعد هذا التسديد: ${formatDualAmountText(currentRemaining)}</span>
                 </div>
             </div>
             
@@ -2180,7 +2632,7 @@
 
     function remindDebt(idx) { 
         let inv = archive[idx]; 
-        let text = `مرحباً الأخ العزيز ${inv.customer}،\nللتذكير: يرجى تسديد المبلغ المتبقي لقائمة فؤاد الچليباوي للديكورات\nالبالغ: *${parseFloat(inv.remaining).toLocaleString()} د.ع*\nشكراً جزيلاً.`; 
+        let text = `مرحباً الأخ العزيز ${inv.customer}،\nللتذكير: يرجى تسديد المبلغ المتبقي لقائمة فؤاد الچليباوي للديكورات\nالبالغ: *${formatDualAmountText(inv.remaining)}*\nشكراً جزيلاً.`; 
         let phone = formatIraqiWhatsApp(inv.phone || "");
         let url = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
         window.open(url, '_blank');
@@ -2210,7 +2662,7 @@
         }); 
         tableHTML += `</table>`;
         
-        let summary = `<div class="invoice-summary-box" style="margin-top:15px; border-color:#0b4a8f;"><div class="summary-row"><span>إجمالي المسحوبات:</span><span>${totalBought.toLocaleString()} د.ع</span></div><div class="summary-row" style="color:#28a745;"><span>إجمالي التسديدات:</span><span>${totalPaid.toLocaleString()} د.ع</span></div><div class="summary-row final" style="color:#dc3545;"><span>الديون المتبقية بذمته:</span><span>${totalRem.toLocaleString()} د.ع</span></div></div>`;
+        let summary = `<div class="invoice-summary-box" style="margin-top:15px; border-color:#0b4a8f;"><div class="summary-row"><span>إجمالي المسحوبات:</span><span>${formatDualAmountHTML(totalBought)}</span></div><div class="summary-row" style="color:#28a745;"><span>إجمالي التسديدات:</span><span>${formatDualAmountHTML(totalPaid)}</span></div><div class="summary-row final" style="color:#dc3545;"><span>الديون المتبقية بذمته:</span><span>${formatDualAmountHTML(totalRem)}</span></div></div>`;
         cont.innerHTML = `<h3 style="color:#0b4a8f; text-align:center; border-bottom:1px solid #ddd; padding-bottom:10px;">كشف حساب: ${cust}</h3>` + tableHTML + summary; 
         cont.style.display = "block"; 
         btn.style.display = "block";
@@ -2225,7 +2677,7 @@
             let tType = r.type === 'راجع' ? '(راجع)' : '';
             printHTML += `<tr><td>${r.date}</td><td>${r.invNo} ${tType}</td><td>${t.toLocaleString()}</td><td>${p.toLocaleString()}</td><td style="color:#dc3545;">${m.toLocaleString()}</td></tr>`;
         });
-        printHTML += `</tbody></table><div class="print-summary-box" style="width:100%; margin-top:20px;"><div class="print-summary-row row-blue"><div class="print-summary-label">إجمالي المسحوبات:</div><div class="print-summary-val">${totalBought.toLocaleString()} د.ع</div></div><div class="print-summary-row row-blue"><div class="print-summary-label">إجمالي التسديدات:</div><div class="print-summary-val">${totalPaid.toLocaleString()} د.ع</div></div><div class="print-summary-row row-red"><div class="print-summary-label">الديون المتبقية بذمته:</div><div class="print-summary-val">${totalRem.toLocaleString()} د.ع</div></div></div><div class="print-footer"><div class="signatures" style="width:100%; display:flex; justify-content:space-around; align-items:center;"><div>توقيع المحاسب / الختم${stampHTML}</div><div>توقيع الزبون المستلم مقرّاً بالدين<br><br>.........................</div></div></div>`;
+        printHTML += `</tbody></table><div class="print-summary-box" style="width:100%; margin-top:20px;"><div class="print-summary-row row-blue"><div class="print-summary-label">إجمالي المسحوبات:</div><div class="print-summary-val">${formatDualAmountHTML(totalBought, true)}</div></div><div class="print-summary-row row-blue"><div class="print-summary-label">إجمالي التسديدات:</div><div class="print-summary-val">${formatDualAmountHTML(totalPaid, true)}</div></div><div class="print-summary-row row-red"><div class="print-summary-label">الديون المتبقية بذمته:</div><div class="print-summary-val">${formatDualAmountHTML(totalRem, true)}</div></div></div><div class="print-footer"><div class="signatures" style="width:100%; display:flex; justify-content:space-around; align-items:center;"><div>توقيع المحاسب / الختم${stampHTML}</div><div>توقيع الزبون المستلم مقرّاً بالدين<br><br>.........................</div></div></div>`;
         
         document.getElementById("statementPrintSection").innerHTML = printHTML;
     }
@@ -2239,9 +2691,9 @@
         cArray.forEach(c => {
             let formattedPhone = formatIraqiWhatsApp(c.phone);
             let phoneBtn = formattedPhone ? `<a href="https://wa.me/${formattedPhone}" target="_blank" class="btn-main" style="background:#25D366; padding:5px 10px; width:auto; text-decoration:none; color:white; font-size:13px; border-radius:5px;">💬 واتساب</a>` : `<span style="font-size:12px; color:var(--sub-text);">لا يوجد رقم</span>`;
-            let debtColor = c.totalDebt > 0 ? "#dc3545" : "#28a745"; let debtText = c.totalDebt > 0 ? `مطلوب: ${c.totalDebt.toLocaleString()}` : `لا يوجد دين`;
+            let debtColor = c.totalDebt > 0 ? "#dc3545" : "#28a745"; let debtText = c.totalDebt > 0 ? `مطلوب: ${formatDualAmountText(c.totalDebt)}` : `لا يوجد دين`;
             let card = document.createElement("div"); card.className = "item-card"; card.style.flexDirection = "column"; card.style.alignItems = "stretch";
-            card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:8px;"><h4 style="margin:0; font-size:16px;">👤 ${c.name}</h4>${phoneBtn}</div><div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:6px;"><span>إجمالي التعامل:</span><b style="color:#007bff;">${c.totalVolume.toLocaleString()}</b></div><div style="display:flex; justify-content:space-between; font-size:14px;"><span>حالة الحساب:</span><b style="color:${debtColor};">${debtText}</b></div>`; list.appendChild(card);
+            card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:8px;"><h4 style="margin:0; font-size:16px;">👤 ${c.name}</h4>${phoneBtn}</div><div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:6px;"><span>إجمالي التعامل:</span><b style="color:#007bff;">${c.totalVolume.toLocaleString()} د.ع</b></div><div style="display:flex; justify-content:space-between; font-size:14px;"><span>حالة الحساب:</span><b style="color:${debtColor};">${debtText}</b></div>`; list.appendChild(card);
         });
     }
 
@@ -2263,7 +2715,7 @@
         for (let c in customersData) {
             if(customersData[c].totalDebt > 0) {
                 totalDebts += customersData[c].totalDebt;
-                rows += `<tr><td>${counter++}</td><td>${customersData[c].name}</td><td>${customersData[c].phone}</td><td>كشف تراكمي</td><td style="color:#dc3545; font-weight:bold;">${customersData[c].totalDebt.toLocaleString()} د.ع</td></tr>`;
+                rows += `<tr><td>${counter++}</td><td>${customersData[c].name}</td><td>${customersData[c].phone}</td><td>كشف تراكمي</td><td style="color:#dc3545; font-weight:bold;">${formatDualAmountText(customersData[c].totalDebt)}</td></tr>`;
             }
         }
         
@@ -2271,7 +2723,7 @@
         
         let stampHTML = settings.stampImage ? `<br><img src="${settings.stampImage}" style="max-height:60px;">` : `<br><br>.........................`;
         
-        let printHTML = `<div class="print-header"><div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span></div><div class="print-titles"><h1 class="main-title">فــــؤاد</h1><p class="sub-title1">للديكورات الداخلية والخارجية</p></div></div><div class="invoice-type-banner" style="background-color:#17a2b8;">كشف الديون الكلية (المطلوبين)</div><div class="cust-info-row"><span style="flex:1;">تاريخ الطباعة: <span class="dotted-line">${new Date().toLocaleDateString('en-GB')}</span></span></div><table class="print-table"><thead><tr><th>ت</th><th>اسم الزبون</th><th>رقم الهاتف</th><th>ملاحظة</th><th class="th-total">المبلغ المتبقي بذمته</th></tr></thead><tbody>${rows}</tbody></table><div style="margin-top:20px; font-size:20px; font-weight:bold; color:#dc3545; text-align:center; border:2px solid #dc3545; padding:10px; border-radius:8px;">إجمالي أموال الديون في السوق: ${totalDebts.toLocaleString()} د.ع</div><div class="print-footer"><div class="signatures" style="width:100%; display:flex; justify-content:space-around; align-items:center;"><div>توقيع المحاسب / الختم${stampHTML}</div></div></div>`;
+        let printHTML = `<div class="print-header"><div class="print-phones"><span class="phone-badge">${settings.phone1} 📞</span></div><div class="print-titles"><h1 class="main-title">فــــؤاد</h1><p class="sub-title1">للديكورات الداخلية والخارجية</p></div></div><div class="invoice-type-banner" style="background-color:#17a2b8;">كشف الديون الكلية (المطلوبين)</div><div class="cust-info-row"><span style="flex:1;">تاريخ الطباعة: <span class="dotted-line">${new Date().toLocaleDateString('en-GB')}</span></span></div><table class="print-table"><thead><tr><th>ت</th><th>اسم الزبون</th><th>رقم الهاتف</th><th>ملاحظة</th><th class="th-total">المبلغ المتبقي بذمته</th></tr></thead><tbody>${rows}</tbody></table><div style="margin-top:20px; font-size:20px; font-weight:bold; color:#dc3545; text-align:center; border:2px solid #dc3545; padding:10px; border-radius:8px;">إجمالي أموال الديون في السوق: ${formatDualAmountText(totalDebts)}</div><div class="print-footer"><div class="signatures" style="width:100%; display:flex; justify-content:space-around; align-items:center;"><div>توقيع المحاسب / الختم${stampHTML}</div></div></div>`;
         debtsPrint.innerHTML = printHTML; 
         triggerPrintSection("debtsPrintSection");
     }
@@ -2316,11 +2768,26 @@
         dropdown.style.display = "block";
     }
 
+    function checkStockWarning(itemName, requestedQty) {
+        let invType = document.getElementById("invoiceType") ? document.getElementById("invoiceType").value : "مبيع";
+        if(invType === 'راجع' || invType === 'تخمين') return;
+        let realItem = items.find(i => i.name === itemName);
+        if(realItem && realItem.stock !== undefined && realItem.stock !== "") {
+            let available = parseFloat(realItem.stock) || 0;
+            if(requestedQty > available) {
+                playWarningBeep();
+                showToast(`⚠️ تنبيه: الكمية (${requestedQty}) أكبر من المتوفر بالمخزن (${available})!`);
+            }
+        }
+    }
+
     function addItemToInvoice(originalIndex) { 
         let selectedItem = items[originalIndex]; 
         let existingItem = currentInvoiceItems.find(i => i.name === selectedItem.name); 
+        let newQty = 1;
         if(existingItem) { 
-            existingItem.qty += 1; 
+            existingItem.qty = (parseFloat(existingItem.qty) || 0) + 1; 
+            newQty = existingItem.qty;
         } else { 
             currentInvoiceItems.push({ 
                 name: selectedItem.name || "", 
@@ -2331,6 +2798,7 @@
                 qty: 1 
             }); 
         } 
+        checkStockWarning(selectedItem.name, newQty);
         document.getElementById("invoiceSearchInput").value = ""; 
         document.getElementById("invoiceDropdown").style.display = "none"; 
         saveCurrentToTab();
@@ -2338,8 +2806,8 @@
     }
 
     function removeInvItem(idx) { if(viewModeInvoice) return; currentInvoiceItems.splice(idx, 1); saveCurrentToTab(); renderInvoiceDetails(); }
-    function changeInvItemQtyBtn(idx, delta) { if(viewModeInvoice) return; let q = parseFloat(currentInvoiceItems[idx].qty) || 0; q += delta; if(q < 1) q = 1; currentInvoiceItems[idx].qty = q; let qtyInput = document.getElementById(`qty_input_${idx}`); if(qtyInput) qtyInput.value = q; updateLiveTotals(idx); }
-    function setInvItemQty(idx, val) { if(viewModeInvoice) return; currentInvoiceItems[idx].qty = val; updateLiveTotals(idx); }
+    function changeInvItemQtyBtn(idx, delta) { if(viewModeInvoice) return; let q = parseFloat(currentInvoiceItems[idx].qty) || 0; q += delta; if(q < 1) q = 1; currentInvoiceItems[idx].qty = q; let qtyInput = document.getElementById(`qty_input_${idx}`); if(qtyInput) qtyInput.value = q; checkStockWarning(currentInvoiceItems[idx].name, q); updateLiveTotals(idx); }
+    function setInvItemQty(idx, val) { if(viewModeInvoice) return; currentInvoiceItems[idx].qty = val; checkStockWarning(currentInvoiceItems[idx].name, parseFloat(val) || 0); updateLiveTotals(idx); }
     function changeInvItemPrice(idx, val) { if(viewModeInvoice) return; currentInvoiceItems[idx].price = val; updateLiveTotals(idx); }
     function changeInvItemMeasure(idx, val) { if(viewModeInvoice) return; currentInvoiceItems[idx].measure = val; saveCurrentToTab(); }
     
@@ -2373,10 +2841,13 @@
         let execName = document.getElementById("executorName").value; 
         let custAddr = document.getElementById("customerAddress").value; 
         let custPhone = document.getElementById("customerPhone").value;  
+        let invNoteVal = document.getElementById("invoiceNote") ? document.getElementById("invoiceNote").value : "";
         let discountAmt = parseFloat(document.getElementById("discountAmount").value) || 0; 
         let deliveryFee = parseFloat(document.getElementById("deliveryFee").value) || 0; 
         let paidAmt = parseFloat(document.getElementById("paidAmount").value) || 0; 
         let remAmt = 0; let invType = "مبيع";  
+        let activeRate = settings.usdRate;
+        let activeMode = settings.currencyMode;
         
         let prevDebt = 0;
         
@@ -2384,14 +2855,19 @@
             invItemsData = viewModeInvoice.items; invNo = viewModeInvoice.invNo; invDate = viewModeInvoice.date; 
             custName = viewModeInvoice.customer; execName = viewModeInvoice.executor || ""; 
             custAddr = viewModeInvoice.address || ""; custPhone = viewModeInvoice.phone || ""; 
+            invNoteVal = viewModeInvoice.note || "";
             discountAmt = parseFloat(viewModeInvoice.discount) || 0; deliveryFee = parseFloat(viewModeInvoice.deliveryFee) || 0;
             prevDebt = parseFloat(viewModeInvoice.previousDebt) || 0; 
             let subT = 0; invItemsData.forEach(i => subT += (parseFloat(i.price)*parseFloat(i.qty))); 
             total = subT; paidAmt = parseFloat(viewModeInvoice.paid) || 0; 
-            remAmt = parseFloat(viewModeInvoice.remaining) || 0; invType = viewModeInvoice.type || "مبيع";  
+            remAmt = parseFloat(viewModeInvoice.remaining) || 0; invType = viewModeInvoice.type || "مبيع";
+            activeRate = viewModeInvoice.usdRate || settings.usdRate;
+            activeMode = viewModeInvoice.currencyMode || settings.currencyMode;
         } else {  
             invType = document.getElementById("invoiceType").value; invItemsData = currentInvoiceItems;
             prevDebt = getCustomerTotalDebt(custName.trim()); 
+            if(currentTab && currentTab.savedUsdRate) activeRate = currentTab.savedUsdRate;
+            if(currentTab && currentTab.savedCurrencyMode) activeMode = currentTab.savedCurrencyMode;
         }  
         
         invItemsData.forEach((itm, idx) => {  
@@ -2427,21 +2903,19 @@
             remAmt = grandTotal - paidAmt;
         }
         
-        let usdRate = parseFloat(settings.usdRate) || 150000; let oneUsd = usdRate / 100; let netTotalUsd = (netTotal / oneUsd).toFixed(2);
-        
         document.getElementById("invoiceTableContainer").innerHTML = screenHTML;  
-        document.getElementById("scrTotal").innerText = total.toLocaleString() + " د.ع"; 
-        document.getElementById("scrDiscount").innerText = discountAmt.toLocaleString() + " د.ع"; 
-        document.getElementById("scrDelivery").innerText = deliveryFee.toLocaleString() + " د.ع"; 
+        document.getElementById("scrTotal").innerHTML = formatDualAmountHTML(total, false, activeRate, activeMode); 
+        document.getElementById("scrDiscount").innerHTML = formatDualAmountHTML(discountAmt, false, activeRate, activeMode); 
+        document.getElementById("scrDelivery").innerHTML = formatDualAmountHTML(deliveryFee, false, activeRate, activeMode); 
         document.getElementById("scrDeliveryRow").style.display = deliveryFee > 0 ? "flex" : "none"; 
         
-        document.getElementById("scrPrevDebt").innerText = prevDebt.toLocaleString() + " د.ع";
+        document.getElementById("scrPrevDebt").innerHTML = formatDualAmountHTML(prevDebt, false, activeRate, activeMode);
         document.getElementById("scrPrevDebtRow").style.display = prevDebt !== 0 ? "flex" : "none";
-        document.getElementById("scrGrandTotal").innerText = grandTotal.toLocaleString() + " د.ع";
+        document.getElementById("scrGrandTotal").innerHTML = formatDualAmountHTML(grandTotal, false, activeRate, activeMode);
         document.getElementById("scrGrandTotalRow").style.display = prevDebt !== 0 ? "flex" : "none";
         
-        document.getElementById("scrPaid").innerText = paidAmt.toLocaleString() + " د.ع"; 
-        document.getElementById("scrRemaining").innerText = remAmt.toLocaleString() + " د.ع";  
+        document.getElementById("scrPaid").innerHTML = formatDualAmountHTML(paidAmt, false, activeRate, activeMode); 
+        document.getElementById("scrRemaining").innerHTML = formatDualAmountHTML(remAmt, false, activeRate, activeMode);  
         
         if(currentRole === 'admin') {
             document.getElementById("adminProfitTracker").style.display = "block";
@@ -2465,10 +2939,16 @@
         else if(invType === 'تخمين') printBanner = `<div class="invoice-type-banner" style="background-color:#ffc107; color:#000;">قائمة تخمين (عرض سعر)</div>`; 
         else printBanner = `<div class="invoice-type-banner" style="background-color:#0b4a8f;">قائمة مبيعات</div>`;
         
-        let discountPrintRow = discountAmt > 0 ? `<div class="print-summary-row row-blue"><div class="print-summary-label" style="background-color:#6f42c1 !important; color:#fff !important;">الخصم الممنوح:</div><div class="print-summary-val" style="color:#6f42c1;">${discountAmt.toLocaleString()} د.ع</div></div>` : '';
-        let deliveryPrintRow = deliveryFee > 0 ? `<div class="print-summary-row row-blue"><div class="print-summary-label" style="background-color:#17a2b8 !important; color:#fff !important;">أجور النقل والعمل:</div><div class="print-summary-val" style="color:#17a2b8;">${deliveryFee.toLocaleString()} د.ع</div></div>` : '';
-        let displayTotalText = usdRate > 0 ? `${netTotal.toLocaleString()} د.ع <br><span style="font-size:12px; color:#555;">(≈ $${Math.round(netTotalUsd).toLocaleString()})</span>` : `${netTotal.toLocaleString()} د.ع`;
+        let discountPrintRow = discountAmt > 0 ? `<div class="print-summary-row row-blue"><div class="print-summary-label" style="background-color:#6f42c1 !important; color:#fff !important;">الخصم الممنوح:</div><div class="print-summary-val" style="color:#6f42c1;">${formatDualAmountHTML(discountAmt, true, activeRate, activeMode)}</div></div>` : '';
+        let deliveryPrintRow = deliveryFee > 0 ? `<div class="print-summary-row row-blue"><div class="print-summary-label" style="background-color:#17a2b8 !important; color:#fff !important;">أجور النقل والعمل:</div><div class="print-summary-val" style="color:#17a2b8;">${formatDualAmountHTML(deliveryFee, true, activeRate, activeMode)}</div></div>` : '';
+        let displayTotalText = formatDualAmountHTML(netTotal, true, activeRate, activeMode);
         
+        let exchangeRateNote = (activeMode === "dual" && parseFloat(activeRate) > 0) 
+            ? `<span style="font-size:12px; color:#0b4a8f; background:#e6f0fa; padding:3px 8px; border-radius:4px; border:1px solid #0b4a8f;">سعر الصرف المعتمد: 100$ = ${parseFloat(activeRate).toLocaleString()} د.ع</span>` 
+            : '';
+
+        let notePrintHTML = invNoteVal ? `<div style="margin-top:8px; padding:8px 12px; border:1px solid #0b4a8f; background:#f0f7ff; border-radius:6px; font-size:14px; font-weight:bold; color:#0b4a8f;">📝 ملاحظات / التجهيز: ${invNoteVal}</div>` : '';
+
         let tafqeetText = numberToArabicWords(grandTotal > 0 ? grandTotal : netTotal);
         let stampHTML = settings.stampImage ? `<br><img src="${settings.stampImage}" style="max-height:80px; margin-top:5px; opacity:0.9;">` : `<br><br>.........................`;
         
@@ -2485,9 +2965,10 @@
             </div>
             ${printBanner}
             <div class="address-bar"><span class="address-text">📍 ${settings.address}</span><span class="accountant-box">المحاسب/المجهز : ${settings.accountant}</span></div>
-            <div class="cust-info-row"><span>التــاريــخ : <span class="dotted-line" style="min-width:100px;">${invDate}</span></span><span style="color:#c82333;">№ ${invNo}</span></div>
+            <div class="cust-info-row"><span>التــاريــخ : <span class="dotted-line" style="min-width:100px;">${invDate}</span></span>${exchangeRateNote}<span style="color:#c82333;">№ ${invNo}</span></div>
             <div class="cust-info-row"><span style="flex:1;">اسم الزبون : <span class="dotted-line" id="printCustName">${custName}</span></span><span style="flex:1;">منفذ العمل : <span class="dotted-line" id="printExecName">${execName}</span></span></div>
             <div class="cust-info-row"><span style="flex:2;">العنــــوان : <span class="dotted-line" id="printCustAddress">${custAddr}</span></span><span style="flex:1; min-width:180px;">رقم الهاتف : <span class="dotted-line" id="printCustPhone">${custPhone}</span></span></div>
+            ${notePrintHTML}
             
             <div style="position:relative; z-index:1;">
                 ${watermarkHtml}
@@ -2512,13 +2993,13 @@
                     <div class="print-summary-row row-blue"><div class="print-summary-label">مجموع قائمة اليوم:</div><div class="print-summary-val" style="line-height:1.2;">${displayTotalText}</div></div>`;
         
         if (prevDebt !== 0) {
-            printHTML += `<div class="print-summary-row" style="background:#fff3cd !important;"><div class="print-summary-label" style="background:#ffc107 !important; color:#000 !important;">ديون سابقة بذمته:</div><div class="print-summary-val" style="color:#856404; font-weight:bold;">${prevDebt.toLocaleString()} د.ع</div></div>`;
-            printHTML += `<div class="print-summary-row row-blue"><div class="print-summary-label" style="font-size:17px;">المطلوب الكلي:</div><div class="print-summary-val" style="font-size:18px; color:#0b4a8f;">${grandTotal.toLocaleString()} د.ع</div></div>`;
+            printHTML += `<div class="print-summary-row" style="background:#fff3cd !important;"><div class="print-summary-label" style="background:#ffc107 !important; color:#000 !important;">ديون سابقة بذمته:</div><div class="print-summary-val" style="color:#856404; font-weight:bold;">${formatDualAmountHTML(prevDebt, true, activeRate, activeMode)}</div></div>`;
+            printHTML += `<div class="print-summary-row row-blue"><div class="print-summary-label" style="font-size:17px;">المطلوب الكلي:</div><div class="print-summary-val" style="font-size:18px; color:#0b4a8f;">${formatDualAmountHTML(grandTotal, true, activeRate, activeMode)}</div></div>`;
         }
         
         printHTML += `
-                    <div class="print-summary-row row-blue"><div class="print-summary-label">المبلغ الواصل الآن:</div><div class="print-summary-val" id="printPaid">${paidAmt.toLocaleString()} د.ع</div></div>
-                    <div class="print-summary-row row-red"><div class="print-summary-label" style="font-size:17px;">المتبقي النهائي:</div><div class="print-summary-val" id="printRemaining" style="font-size:19px;">${remAmt.toLocaleString()} د.ع</div></div>
+                    <div class="print-summary-row row-blue"><div class="print-summary-label">المبلغ الواصل الآن:</div><div class="print-summary-val" id="printPaid">${formatDualAmountHTML(paidAmt, true, activeRate, activeMode)}</div></div>
+                    <div class="print-summary-row row-red"><div class="print-summary-label" style="font-size:17px;">المتبقي النهائي:</div><div class="print-summary-val" id="printRemaining" style="font-size:19px;">${formatDualAmountHTML(remAmt, true, activeRate, activeMode)}</div></div>
                     <div style="padding:10px; text-align:center; background:#f0f4f8; border-top:2px solid #0b4a8f; font-size:14px; font-weight:bold; color:#333;">
                         المبلغ كتابةً: ${tafqeetText}
                     </div>
@@ -2532,6 +3013,10 @@
     function calculateTotals() {  
         if(viewModeInvoice) return;  
         
+        let currentTab = invoiceTabs[activeTabIndex] || {};
+        let activeRate = currentTab.savedUsdRate || settings.usdRate;
+        let activeMode = currentTab.savedCurrencyMode || settings.currencyMode;
+
         let cName = document.getElementById("customerName").value.trim();
         let prevDebt = getCustomerTotalDebt(cName);
         
@@ -2543,18 +3028,18 @@
         let grandTotal = netTotal + prevDebt;
         let remainingAmount = grandTotal - paidAmount;  
         
-        document.getElementById("scrTotal").innerText = currentInvoiceTotal.toLocaleString() + " د.ع";  
-        document.getElementById("scrDiscount").innerText = discountAmount.toLocaleString() + " د.ع";  
-        document.getElementById("scrDelivery").innerText = deliveryFee.toLocaleString() + " د.ع"; 
+        document.getElementById("scrTotal").innerHTML = formatDualAmountHTML(currentInvoiceTotal, false, activeRate, activeMode);  
+        document.getElementById("scrDiscount").innerHTML = formatDualAmountHTML(discountAmount, false, activeRate, activeMode);  
+        document.getElementById("scrDelivery").innerHTML = formatDualAmountHTML(deliveryFee, false, activeRate, activeMode); 
         document.getElementById("scrDeliveryRow").style.display = deliveryFee > 0 ? "flex" : "none"; 
         
-        document.getElementById("scrPrevDebt").innerText = prevDebt.toLocaleString() + " د.ع";
+        document.getElementById("scrPrevDebt").innerHTML = formatDualAmountHTML(prevDebt, false, activeRate, activeMode);
         document.getElementById("scrPrevDebtRow").style.display = prevDebt !== 0 ? "flex" : "none";
-        document.getElementById("scrGrandTotal").innerText = grandTotal.toLocaleString() + " د.ع";
+        document.getElementById("scrGrandTotal").innerHTML = formatDualAmountHTML(grandTotal, false, activeRate, activeMode);
         document.getElementById("scrGrandTotalRow").style.display = prevDebt !== 0 ? "flex" : "none";
 
-        document.getElementById("scrPaid").innerText = paidAmount.toLocaleString() + " د.ع";  
-        document.getElementById("scrRemaining").innerText = remainingAmount.toLocaleString() + " د.ع";  
+        document.getElementById("scrPaid").innerHTML = formatDualAmountHTML(paidAmount, false, activeRate, activeMode);  
+        document.getElementById("scrRemaining").innerHTML = formatDualAmountHTML(remainingAmount, false, activeRate, activeMode);  
         
         if(currentRole === 'admin') {
             let totalCost = 0;
@@ -2564,8 +3049,8 @@
             if(el) el.innerText = instantProfit.toLocaleString();
         }
         
-        if(document.getElementById("printPaid")) document.getElementById("printPaid").innerText = paidAmount.toLocaleString() + " د.ع";  
-        if(document.getElementById("printRemaining")) document.getElementById("printRemaining").innerText = remainingAmount.toLocaleString() + " د.ع";  
+        if(document.getElementById("printPaid")) document.getElementById("printPaid").innerHTML = formatDualAmountHTML(paidAmount, true, activeRate, activeMode);  
+        if(document.getElementById("printRemaining")) document.getElementById("printRemaining").innerHTML = formatDualAmountHTML(remainingAmount, true, activeRate, activeMode);  
     }
 
     function updatePrintInfo() { if(document.getElementById("printCustName")) document.getElementById("printCustName").innerText = document.getElementById("customerName").value; if(document.getElementById("printExecName")) document.getElementById("printExecName").innerText = document.getElementById("executorName").value; if(document.getElementById("printCustAddress")) document.getElementById("printCustAddress").innerText = document.getElementById("customerAddress").value; if(document.getElementById("printCustPhone")) document.getElementById("printCustPhone").innerText = document.getElementById("customerPhone").value; }  
@@ -2578,6 +3063,7 @@
         document.getElementById("btnSaveInvoiceMain").style.display = "none"; 
         document.getElementById("btnSuspendInvoice").style.display = "none"; 
         document.getElementById("btnEditFromView").style.display = "inline-block";
+        document.getElementById("debtLimitAlert").style.display = "none";
         renderInvoiceDetails(); 
         renderInvoiceTabs(); 
         document.getElementById("overlay").style.display = "block"; 
@@ -2588,7 +3074,7 @@
         if(currentRole !== 'admin') return alert("صلاحية الإدارة فقط!");
         let inv = viewModeInvoice; if(!inv) return; let itm = inv.items[itemIdx]; let currentQty = parseFloat(itm.qty) || 0; if(currentQty <= 0) { alert("تم استرجاعها سابقاً!"); return; }
         let returnQtyStr = prompt(`المادة: ${itm.name}\nالكمية الحالية: ${currentQty}\nأدخل الكمية المسترجعة:`, currentQty); if(!returnQtyStr) return; let returnQty = parseFloat(returnQtyStr); if(isNaN(returnQty) || returnQty <= 0 || returnQty > currentQty) return;
-        let realItem = items.find(i => i.name === itm.name); if(realItem) { let st = parseFloat(realItem.stock) || 0; realItem.stock = st + returnQty; }
+        let realItem = items.find(i => i.name === itm.name); if(realItem && realItem.stock !== undefined && realItem.stock !== "") { let st = parseFloat(realItem.stock) || 0; realItem.stock = st + returnQty; }
         let itemPrice = parseFloat(itm.price) || 0; let refundAmount = itemPrice * returnQty;
         itm.qty = currentQty - returnQty; inv.subTotal = (parseFloat(inv.subTotal) || 0) - refundAmount; inv.total = (parseFloat(inv.total) || 0) - refundAmount;
         if(inv.remaining >= refundAmount) { inv.remaining = (parseFloat(inv.remaining) || 0) - refundAmount; } else { let leftover = refundAmount - inv.remaining; inv.remaining = 0; inv.paid = (parseFloat(inv.paid) || 0) - leftover; }
@@ -2597,31 +3083,37 @@
     }
 
     function shareInvoice() {  
-        let custName, execName, custPhone, invItems, netTotal, paid, rem, invType, discountAmt, deliveryFee, prevDebt, grandTotal;  
+        let custName, execName, custPhone, invNoteVal, invItems, netTotal, paid, rem, invType, discountAmt, deliveryFee, prevDebt, grandTotal, activeRate, activeMode;  
         if (viewModeInvoice) { 
-            custName = viewModeInvoice.customer; execName = viewModeInvoice.executor; custPhone = viewModeInvoice.phone; invItems = viewModeInvoice.items; 
+            custName = viewModeInvoice.customer; execName = viewModeInvoice.executor; custPhone = viewModeInvoice.phone; invNoteVal = viewModeInvoice.note || ""; invItems = viewModeInvoice.items; 
             netTotal = parseFloat(viewModeInvoice.total)||0; paid = parseFloat(viewModeInvoice.paid)||0; rem = parseFloat(viewModeInvoice.remaining)||0; 
             invType = viewModeInvoice.type || "مبيع"; discountAmt = parseFloat(viewModeInvoice.discount)||0; deliveryFee = parseFloat(viewModeInvoice.deliveryFee)||0; 
             prevDebt = parseFloat(viewModeInvoice.previousDebt)||0; grandTotal = netTotal + prevDebt;
+            activeRate = viewModeInvoice.usdRate || settings.usdRate;
+            activeMode = viewModeInvoice.currencyMode || settings.currencyMode;
         } else { 
+            let currentTab = invoiceTabs[activeTabIndex] || {};
             custName = document.getElementById("customerName").value; execName = document.getElementById("executorName").value; custPhone = document.getElementById("customerPhone").value; 
+            invNoteVal = document.getElementById("invoiceNote") ? document.getElementById("invoiceNote").value : "";
             invType = document.getElementById("invoiceType").value; invItems = currentInvoiceItems; discountAmt = parseFloat(document.getElementById("discountAmount").value) || 0; 
             deliveryFee = parseFloat(document.getElementById("deliveryFee").value) || 0; 
             prevDebt = getCustomerTotalDebt(custName.trim());
             netTotal = currentInvoiceTotal + deliveryFee - discountAmt; grandTotal = netTotal + prevDebt;
             paid = parseFloat(document.getElementById("paidAmount").value) || 0; rem = grandTotal - paid; 
+            activeRate = currentTab.savedUsdRate || settings.usdRate;
+            activeMode = currentTab.savedCurrencyMode || settings.currencyMode;
         }  
         let titlePrefix = '';
         if(invType === 'راجع') titlePrefix = "🛑 *قائمة إرجاع (راجع)*"; else if(invType === 'جملة') titlePrefix = "📦 *قائمة جملة*"; else if(invType === 'تخمين') titlePrefix = "📝 *قائمة تخمين (عرض سعر)*"; else titlePrefix = "🧾 *قائمة مبيعات*";
-        let text = `${titlePrefix} - فؤاد الچليباوي للديكورات\n👤 الزبون: ${custName || "زبوننا الكريم"}\n`; if(custPhone) text += `📞 هاتف: ${custPhone}\n`; if(execName) text += `👷 منفذ: ${execName}\n`; text += `━━━━━━━━━━━\n`;  
+        let text = `${titlePrefix} - فؤاد الچليباوي للديكورات\n👤 الزبون: ${custName || "زبوننا الكريم"}\n`; if(custPhone) text += `📞 هاتف: ${custPhone}\n`; if(execName) text += `👷 منفذ: ${execName}\n`; if(invNoteVal) text += `📝 ملاحظة: ${invNoteVal}\n`; text += `━━━━━━━━━━━\n`;  
         invItems.forEach(itm => { text += `🔸 *${itm.name}*\n    العدد: ${itm.qty} ${itm.measure || ''} | الإجمالي: ${(parseFloat(itm.price) * itm.qty).toLocaleString()} د.ع\n`; }); text += `━━━━━━━━━━━\n`;
-        if (deliveryFee > 0) text += `🚚 *أجور النقل والعمل:* ${deliveryFee.toLocaleString()} د.ع\n`; if (discountAmt > 0) text += `🎁 *الخصم:* ${discountAmt.toLocaleString()} د.ع\n`;
+        if (deliveryFee > 0) text += `🚚 *أجور النقل والعمل:* ${formatDualAmountText(deliveryFee, activeRate, activeMode)}\n`; if (discountAmt > 0) text += `🎁 *الخصم:* ${formatDualAmountText(discountAmt, activeRate, activeMode)}\n`;
         
-        text += `💵 *مجموع قائمة اليوم:* ${netTotal.toLocaleString()} د.ع\n`;
-        if (prevDebt !== 0) text += `📜 *ديون سابقة بذمته:* ${prevDebt.toLocaleString()} د.ع\n`;
-        if (prevDebt !== 0) text += `🧾 *المطلوب الكلي:* ${grandTotal.toLocaleString()} د.ع\n`;
+        text += `💵 *مجموع قائمة اليوم:* ${formatDualAmountText(netTotal, activeRate, activeMode)}\n`;
+        if (prevDebt !== 0) text += `📜 *ديون سابقة بذمته:* ${formatDualAmountText(prevDebt, activeRate, activeMode)}\n`;
+        if (prevDebt !== 0) text += `🧾 *المطلوب الكلي:* ${formatDualAmountText(grandTotal, activeRate, activeMode)}\n`;
         
-        if (paid > 0 || rem !== 0) { text += `💸 *الواصل الآن:* ${paid.toLocaleString()} د.ع\n💳 *المتبقي النهائي:* ${rem.toLocaleString()} د.ع\n`; } 
+        if (paid > 0 || rem !== 0) { text += `💸 *الواصل الآن:* ${formatDualAmountText(paid, activeRate, activeMode)}\n💳 *المتبقي النهائي:* ${formatDualAmountText(rem, activeRate, activeMode)}\n`; } 
         
         let formattedPhone = formatIraqiWhatsApp(custPhone || "");
         let url = formattedPhone ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
@@ -2705,11 +3197,11 @@
     
     function shareLowStockWhatsApp() { let lowItems = items.filter(i => i.stock !== undefined && i.stock !== "" && parseFloat(i.stock) <= 5); if(lowItems.length === 0) { alert("لا توجد نواقص!"); return; } let text = "📋 *قائمة نواقص المواد المطلوبة*\n━━━━━━━━━━━━━━━━━\n"; lowItems.forEach(i => { text += `🔸 *${i.name}* -> المتبقي: [ ${i.stock} ]\n`; }); text += "━━━━━━━━━━━━━━━━━\nيرجى التجهيز."; window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank"); }
     
-    function exportExcel() { if(archive.length === 0) { alert("الأرشيف فارغ!"); return; } let csv = '\uFEFF'; csv += "رقم الوصل,التاريخ,نوع القائمة,الزبون,رقم الهاتف,منفذ العمل,المجموع الكلي,الخصم الممنوح,المبلغ الواصل,الديون المتبقية\n"; archive.forEach(inv => { let total = parseFloat(inv.total) || 0; let sub = parseFloat(inv.subTotal) || total; let disc = parseFloat(inv.discount) || 0; let paid = parseFloat(inv.paid) || 0; let rem = parseFloat(inv.remaining) || 0; let cleanCust = (inv.customer || '').replace(/,/g, ' '); let cleanExec = (inv.executor || '').replace(/,/g, ' '); csv += `${inv.invNo},${inv.date},${inv.type||'مبيع'},${cleanCust},${inv.phone||''},${cleanExec},${sub},${disc},${paid},${rem}\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); const url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", `ارشيف_الوصولات.csv`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast("تم تصدير ملف الإكسل!"); }
+    function exportExcel() { if(archive.length === 0) { alert("الأرشيف فارغ!"); return; } let csv = '\uFEFF'; csv += "رقم الوصل,التاريخ,نوع القائمة,الزبون,رقم الهاتف,منفذ العمل,الملاحظات,المجموع الكلي,الخصم الممنوح,المبلغ الواصل,الديون المتبقية\n"; archive.forEach(inv => { let total = parseFloat(inv.total) || 0; let sub = parseFloat(inv.subTotal) || total; let disc = parseFloat(inv.discount) || 0; let paid = parseFloat(inv.paid) || 0; let rem = parseFloat(inv.remaining) || 0; let cleanCust = (inv.customer || '').replace(/,/g, ' '); let cleanExec = (inv.executor || '').replace(/,/g, ' '); let cleanNote = (inv.note || '').replace(/,/g, ' '); csv += `${inv.invNo},${inv.date},${inv.type||'مبيع'},${cleanCust},${inv.phone||''},${cleanExec},${cleanNote},${sub},${disc},${paid},${rem}\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); const url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", `ارشيف_الوصولات.csv`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast("تم تصدير ملف الإكسل!"); }
     
     function exportBackup() { let allData = { items, archive, expenses, suppliers, inventoryLog, employees, suspendedInvoices, settings }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData)); const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "Aljelibawi_Full_Backup.json"); dl.click(); showToast("تم الحفظ الشامل محلياً!"); }  
     
-    function importBackup(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const imp = JSON.parse(e.target.result); if(Array.isArray(imp)) { items = imp; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } else { if(imp.items) { items = imp.items; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } if(imp.archive) { archive = imp.archive; localStorage.setItem('myArchiveData', JSON.stringify(archive)); syncCloud('archive', archive); } if(imp.expenses) { expenses = imp.expenses; localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses); } if(imp.suppliers) { suppliers = imp.suppliers; localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); syncCloud('suppliers', suppliers); } if(imp.inventoryLog) { inventoryLog = imp.inventoryLog; localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); syncCloud('inventoryLog', inventoryLog); } if(imp.employees) { employees = imp.employees; localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); } if(imp.suspendedInvoices) { suspendedInvoices = imp.suspendedInvoices; localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); syncCloud('suspendedInvoices', suspendedInvoices); updateSuspendedCount(); } if(imp.settings) { settings = imp.settings; localStorage.setItem('mySettingsData', JSON.stringify(settings)); syncCloud('settings', settings); initSettings();} } renderItems(); updateCustomerDropdown(); showToast("تم الاسترجاع بنجاح!"); } catch (err) { alert("ملف غير صالح!"); } }; reader.readAsText(file); event.target.value = ''; }  
+    function importBackup(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const imp = JSON.parse(e.target.result); if(Array.isArray(imp)) { items = imp; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } else { if(imp.items) { items = imp.items; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } if(imp.archive) { archive = imp.archive; localStorage.setItem('myArchiveData', JSON.stringify(archive)); syncCloud('archive', archive); } if(imp.expenses) { expenses = imp.expenses; localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses); } if(imp.suppliers) { suppliers = imp.suppliers; localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); syncCloud('suppliers', suppliers); } if(imp.inventoryLog) { inventoryLog = imp.inventoryLog; localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); syncCloud('inventoryLog', inventoryLog); } if(imp.employees) { employees = imp.employees; localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); } if(imp.suspendedInvoices) { suspendedInvoices = imp.suspendedInvoices; localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); syncCloud('suspendedInvoices', suspendedInvoices); updateSuspendedCount(); } if(imp.settings) { Object.assign(settings, imp.settings); localStorage.setItem('mySettingsData', JSON.stringify(settings)); syncCloud('settings', settings); initSettings();} } renderItems(); updateCustomerDropdown(); showToast("تم الاسترجاع بنجاح!"); } catch (err) { alert("ملف غير صالح!"); } }; reader.readAsText(file); event.target.value = ''; }  
     
     function annualArchiving() {
         if(currentRole !== 'admin') { alert("هذه الصلاحية للمدير فقط!"); return; }
@@ -2762,17 +3254,17 @@
             }
         }); 
 
-        expenses.forEach(exp => { if(exp.date === today) tExp += (parseFloat(exp.amount) || 0); }); 
+        expenses.forEach(exp => { if(!exp.noteOnly && exp.date === today) tExp += (parseFloat(exp.amount) || 0); }); 
         suppliers.forEach(tx => { if(tx.date === today && tx.type === 'تسديد') { tSupPaid += (parseFloat(tx.amount) || 0); } }); 
         
         let totalCashIn = tPaidDirect + tOldDebtCollected; 
         let netCash = totalCashIn - tExp - tSupPaid; 
         
-        let text = `📊 *تقرير العزلية اليومي الآلي* 📊\n📅 ${today}\n━━━━━━━━━\n🔹 إجمالي مبيعات اليوم: ${tSales.toLocaleString()} د.ع\n💵 مقبوضات وصولات اليوم: ${tPaidDirect.toLocaleString()} د.ع\n`; 
+        let text = `📊 *تقرير العزلية اليومي الآلي* 📊\n📅 ${today}\n━━━━━━━━━\n🔹 إجمالي مبيعات اليوم: ${formatDualAmountText(tSales)}\n💵 مقبوضات وصولات اليوم: ${formatDualAmountText(tPaidDirect)}\n`; 
         if(tOldDebtCollected > 0) { 
-            text += `📥 تسديدات ديون سابقة مقبوضة اليوم: ${tOldDebtCollected.toLocaleString()} د.ع\n`; 
+            text += `📥 تسديدات ديون سابقة مقبوضة اليوم: ${formatDualAmountText(tOldDebtCollected)}\n`; 
         } 
-        text += `💰 إجمالي الداخل للصندوق (كاش): ${totalCashIn.toLocaleString()} د.ع\n━━━━━━━━━\n🔻 المصروفات اليومية: ${tExp.toLocaleString()} د.ع\n📤 تسديدات للشركات: ${tSupPaid.toLocaleString()} د.ع\n━━━━━━━━━\n✨ *صافي النقد المتبقي بالقاصة: ${netCash.toLocaleString()} د.ع*\n`; 
+        text += `💰 إجمالي الداخل للصندوق (كاش): ${formatDualAmountText(totalCashIn)}\n━━━━━━━━━\n🔻 المصروفات اليومية: ${formatDualAmountText(tExp)}\n📤 تسديدات للشركات: ${formatDualAmountText(tSupPaid)}\n━━━━━━━━━\n✨ *صافي النقد المتبقي بالقاصة: ${formatDualAmountText(netCash)}*\n`; 
         
         let allData = { items, archive, expenses, suppliers, inventoryLog, employees, suspendedInvoices, settings }; 
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData)); 
