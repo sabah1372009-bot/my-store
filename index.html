@@ -185,6 +185,7 @@
         <h1 style="color:#f7941d; font-size:35px; margin:0 0 10px 0; text-shadow: 1px 1px 0 #0b4a8f;">فــــؤاد</h1>
         <h2>نظام الإدارة السحابي</h2>
         <p>يرجى تسجيل الدخول للوصول إلى بياناتك بأمان من أي جهاز.</p>
+        <div id="authLockedBranchBanner" style="display:none; background:rgba(255,193,7,0.18); border:1px solid #ffc107; color:#b8860b; padding:8px 10px; border-radius:8px; font-size:12px; font-weight:bold; margin-bottom:12px;"></div>
         <div class="input-group"><input type="email" id="authEmail" placeholder="البريد الإلكتروني (جيميل)"></div>
         <div class="input-group"><input type="password" id="authPass" placeholder="الرمز السري للحساب السحابي"></div>
         <div class="input-group" style="background:rgba(11,74,143,0.05); padding:8px; border-radius:8px; border:1px dashed #0b4a8f;">
@@ -201,6 +202,7 @@
     <div class="header">  
         <div class="header-title" id="appMainHeader">
             <span>فؤاد الچليباوي</span>
+            <span id="branchHeaderBadge" onclick="promptQuickBranchSelect()" title="اضغط لتحديد أو تغيير اسم الفرع" style="font-size:11px; padding:3px 9px; border-radius:12px; background:#0b4a8f; color:#ffc107; border:1px solid #ffc107; cursor:pointer; font-weight:bold;">🏛️ تحديد الفرع</span>
             <span id="networkStatus" style="font-size:11px; padding:2px 5px; border-radius:4px; background:#28a745; color:#fff;">🟢 متصل</span>
         </div>  
         <div class="header-actions">
@@ -377,6 +379,22 @@
         <div class="settings-container">
             <div class="item-card" style="flex-direction: column; align-items: stretch; gap: 15px;">
                 <h3 style="margin:0; border-bottom:1px solid var(--border-color); padding-bottom:10px;">⚙️ إعدادات الوصل والنظام</h3>
+                <div class="input-group" style="background:rgba(11,74,143,0.08); padding:12px; border-radius:8px; border:2px solid #0b4a8f;">
+                    <label style="color:#0b4a8f; font-size:15px;">🏢 هوية الفرع الحالي (يظهر أعلى الشاشة لمنع الخلط)</label>
+                    <div style="display:flex; gap:6px; margin-bottom:8px;">
+                        <button type="button" class="btn-main" style="background:#0b4a8f; color:#ffc107; border:1px solid #ffc107; padding:7px; font-size:12px;" onclick="setBranchPreset('معرض الواجهات')">🏛️ معرض الواجهات</button>
+                        <button type="button" class="btn-main" style="background:#17a2b8; color:#fff; padding:7px; font-size:12px;" onclick="setBranchPreset('محل الجبس بورد')">🧱 محل الجبس بورد</button>
+                    </div>
+                    <input type="text" id="setBranchName" placeholder="اكتب اسم الفرع (مثال: معرض الواجهات)">
+                    <p id="currentAccountEmailDisplay" style="font-size:11px; color:var(--sub-text); margin:5px 0 0 0;"></p>
+                </div>
+                <div style="background:rgba(40,167,69,0.08); padding:12px; border-radius:8px; border:1px solid #28a745; display:flex; flex-direction:column; gap:8px;">
+                    <h4 style="margin:0; color:#28a745;">🛡️ مركز الحماية والنسخ السحابية التلقائية</h4>
+                    <p style="margin:0; font-size:12px; color:var(--sub-text);">درع منع التصفير مفعّل تلقائياً، ويتم حفظ نسخة سحابية صامتة يومياً.</p>
+                    <button type="button" class="btn-save" style="background:#28a745; margin:0; font-size:14px; padding:10px;" onclick="runAutoCloudBackup(true)">☁️ أخذ نسخة احتياطية سحابية الآن</button>
+                    <button type="button" class="btn-save" style="background:#0b4a8f; margin:0; font-size:14px; padding:10px;" onclick="openCloudBackupsModal()">🕰️ استرجاع النسخ السحابية التلقائية (آخر 14 يوم)</button>
+                    <button type="button" class="btn-save" style="background:#17a2b8; margin:0; font-size:13px; padding:9px;" onclick="forcePushLocalToCloud()">⬆️ فرض رفع بيانات هذا الجهاز للسحابة</button>
+                </div>
                 <div class="input-group" style="background:rgba(220,53,69,0.05); padding:10px; border-radius:8px; border:1px dashed #dc3545;">
                     <label style="color:#dc3545;">🔑 الرمز السري للإدارة (PIN لقفل صلاحيات الكاشير)</label>
                     <input type="text" id="setAdminPin" placeholder="مثال: 1234">
@@ -439,6 +457,27 @@
     </div>  
 
     <div class="overlay" id="overlay" onclick="closeModals()"></div>  
+
+    <div class="modal" id="shieldModal" style="z-index:10050; border-top:4px solid #28a745;">
+        <h3 class="modal-header" style="color:#28a745;"><span>🛡️ درع حماية البيانات — تم إيقاف التصفير التلقائي</span></h3>
+        <div id="shieldModalBody" style="font-size:14px; line-height:1.7; margin-bottom:15px;"></div>
+        <button class="btn-save" style="background:#28a745; font-size:15px;" onclick="shieldUploadLocalToCloud()">⬆️ رفع بيانات الجهاز إلى السحابة فوراً (استعادة ومزامنة)</button>
+        <button class="btn-cancel" style="color:#dc3545; font-size:13px;" onclick="shieldAcceptEmptyCloud()">⚠️ تجاهل بيانات الجهاز والبدء من سحابة فارغة</button>
+    </div>
+
+    <div class="modal" id="branchLockModal" style="z-index:10060; border-top:4px solid #dc3545;">
+        <h3 class="modal-header" style="color:#dc3545;"><span>🔒 قفل حماية الفروع — تنبيه تداخل حسابات</span></h3>
+        <div id="branchLockModalBody" style="font-size:14px; line-height:1.7; margin-bottom:15px;"></div>
+        <button class="btn-save" style="background:#0b4a8f; font-size:15px;" onclick="cancelCrossBranchLogin()">🔙 العودة وتسجيل الخروج (إبقاء بيانات الفرع السابق آمنة)</button>
+        <button class="btn-save" style="background:#fd7e14; color:#000; font-size:14px;" onclick="confirmSwitchBranchSafely()">🔄 تبديل الفرع بأمان (تنزيل نسخة للفرع السابق + فتح الجديد)</button>
+    </div>
+
+    <div class="modal" id="cloudBackupsModal" style="z-index:10040; border-top:4px solid #0b4a8f;">
+        <h3 class="modal-header"><span>🕰️ النسخ الاحتياطية السحابية التلقائية</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>
+        <p style="font-size:13px; color:var(--sub-text); margin-top:0;">اختر أي يوم لاسترجاع كامل المواد والوصولات والديون الخاصة به بضغطة زر:</p>
+        <div id="cloudBackupsContainer" style="max-height:360px; overflow-y:auto; margin-bottom:15px;"></div>
+        <button class="btn-cancel" onclick="closeModals()">إغلاق</button>
+    </div>
 
     <div class="modal" id="pinModal">
         <h3 class="modal-header"><span>🔒 قفل الإدارة</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>
@@ -724,7 +763,7 @@
     if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "ضع_المفتاح_هنا") { firebase.initializeApp(firebaseConfig); isCloudReady = true; }
 
     let items = []; let archive = []; let expenses = []; let suppliers = []; let inventoryLog = []; let employees = []; let suspendedInvoices = []; let currentSupImageBase64 = ""; 
-    let settings = { currencyMode: "dual", usdRate: 150000, debtLimit: 0, accountant: "صباح", phone1: "07804884656", phone2: "07802204431", address: "الأنبار - الرمادي", logo: "https://cdn-icons-png.flaticon.com/512/2163/2163350.png", stampImage: "", adminPin: "1234" };  
+    let settings = { branchName: "", currencyMode: "dual", usdRate: 150000, debtLimit: 0, accountant: "صباح", phone1: "07804884656", phone2: "07802204431", address: "الأنبار - الرمادي", logo: "https://cdn-icons-png.flaticon.com/512/2163/2163350.png", stampImage: "", adminPin: "1234" };  
       
     let invoiceTabs = []; 
     let activeTabIndex = 0;
@@ -953,29 +992,317 @@
             if(currentUser) syncAllToCloud(); 
         });
 
+        window.__allowEmptySync = false;
+        let pendingCrossBranchUser = null;
+        let cloudListenersAttached = false;
+
+        function normalizeFirebaseList(val) {
+            if (!val) return [];
+            if (Array.isArray(val)) return val.filter(x => x !== null && x !== undefined);
+            if (typeof val === 'object') return Object.values(val).filter(x => x !== null && x !== undefined);
+            return [];
+        }
+
+        function updateBranchBadge() {
+            const badge = document.getElementById('branchHeaderBadge');
+            const emailDisp = document.getElementById('currentAccountEmailDisplay');
+            const bName = (settings.branchName || localStorage.getItem('lockedBranchName') || '').trim();
+            const emailStr = (currentUser && currentUser.email) ? currentUser.email : (localStorage.getItem('lockedBranchEmail') || '');
+
+            if (emailDisp) {
+                emailDisp.innerText = emailStr ? `📧 الحساب السحابي المرتبط: ${emailStr}` : '';
+            }
+            if (!badge) return;
+
+            if (bName) {
+                localStorage.setItem('lockedBranchName', bName);
+                if (bName.includes('جبس')) {
+                    badge.innerHTML = `🧱 ${bName}`;
+                    badge.style.background = '#17a2b8';
+                    badge.style.color = '#ffffff';
+                    badge.style.border = '1px solid #ffffff';
+                } else {
+                    badge.innerHTML = `🏛️ ${bName}`;
+                    badge.style.background = '#0b4a8f';
+                    badge.style.color = '#ffc107';
+                    badge.style.border = '1px solid #ffc107';
+                }
+            } else {
+                badge.innerHTML = emailStr ? `⚠️ اضغط لتسمية الفرع ✏️` : `🏛️ تحديد الفرع`;
+                badge.style.background = '#fd7e14';
+                badge.style.color = '#ffffff';
+                badge.style.border = '1px solid #ffffff';
+            }
+        }
+
+        function setBranchPreset(name) {
+            const inp = document.getElementById('setBranchName');
+            if (inp) inp.value = name;
+            settings.branchName = name;
+            localStorage.setItem('lockedBranchName', name);
+            localStorage.setItem('mySettingsData', JSON.stringify(settings));
+            syncCloud('settings', settings);
+            updateBranchBadge();
+            showToast(`✅ تم تثبيت هوية الفرع: ${name}`);
+        }
+
+        function promptQuickBranchSelect() {
+            const currentB = (settings.branchName || '').trim();
+            const choice = prompt(
+                "حدد اسم الفرع ليظهر في أعلى الشاشة ويميز هذا الحساب:\n" +
+                "اكتب (1) لـ: معرض الواجهات\n" +
+                "اكتب (2) لـ: محل الجبس بورد\n" +
+                "أو اكتب أي اسم مخصص للفرع:",
+                currentB || "1"
+            );
+            if (choice === null) return;
+            const trimmed = choice.trim();
+            let finalName = trimmed;
+            if (trimmed === "1") finalName = "معرض الواجهات";
+            else if (trimmed === "2") finalName = "محل الجبس بورد";
+            if (!finalName) return;
+
+            settings.branchName = finalName;
+            localStorage.setItem('lockedBranchName', finalName);
+            localStorage.setItem('mySettingsData', JSON.stringify(settings));
+            syncCloud('settings', settings);
+            initSettings();
+            updateBranchBadge();
+            showToast(`✅ تم تثبيت الفرع: ${finalName}`);
+        }
+
+        function getRawLocalStorageCounts() {
+            let lItems = [], lArchive = [];
+            try { lItems = JSON.parse(localStorage.getItem('myPricesData')) || []; } catch(e) {}
+            try { lArchive = JSON.parse(localStorage.getItem('myArchiveData')) || []; } catch(e) {}
+            return { itemsCount: Array.isArray(lItems) ? lItems.length : 0, archiveCount: Array.isArray(lArchive) ? lArchive.length : 0 };
+        }
+
+        function updateAuthLockedBanner() {
+            const banner = document.getElementById('authLockedBranchBanner');
+            if (!banner) return;
+            const lockedEmail = localStorage.getItem('lockedBranchEmail');
+            const lockedName = localStorage.getItem('lockedBranchName');
+            const counts = getRawLocalStorageCounts();
+            if (lockedEmail && (counts.itemsCount > 0 || counts.archiveCount > 0)) {
+                const label = lockedName ? `${lockedName} (${lockedEmail})` : lockedEmail;
+                banner.innerHTML = `🔒 هذا الجهاز يحتوي بيانات محفوظة لـ: <b>${label}</b><br>(${counts.itemsCount} مادة | ${counts.archiveCount} وصل)`;
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function attachRealtimeCloudListeners(uRef) {
+            if (cloudListenersAttached) return;
+            cloudListenersAttached = true;
+
+            uRef.child('items').on('value', s => {
+                if (s.exists()) {
+                    let incoming = normalizeFirebaseList(s.val());
+                    if (incoming.length === 0 && items.length > 2 && !window.__allowEmptySync) {
+                        showToast("🛡️ الدرع منع مسح المواد لأن السحابة أرسلت قائمة فارغة!");
+                        return;
+                    }
+                    items = incoming;
+                    if (items.length > 0) localStorage.setItem('lastSafeCount_items', String(items.length));
+                    localStorage.setItem('myPricesData', JSON.stringify(items));
+                    renderItems();
+                } else if (items.length > 2 && !window.__allowEmptySync) {
+                    showToast("🛡️ الدرع حمى بيانات المواد المحلية من التصفير!");
+                }
+            });
+
+            uRef.child('archive').on('value', s => {
+                if (s.exists()) {
+                    let incoming = normalizeFirebaseList(s.val());
+                    if (incoming.length === 0 && archive.length > 2 && !window.__allowEmptySync) {
+                        showToast("🛡️ الدرع منع مسح الوصولات لأن السحابة أرسلت قائمة فارغة!");
+                        return;
+                    }
+                    archive = incoming;
+                    if (archive.length > 0) localStorage.setItem('lastSafeCount_archive', String(archive.length));
+                    localStorage.setItem('myArchiveData', JSON.stringify(archive));
+                    renderArchive();
+                    renderDebts();
+                    updateCustomerDropdown();
+                } else if (archive.length > 2 && !window.__allowEmptySync) {
+                    showToast("🛡️ الدرع حمى أرشيف الوصولات المحلي من التصفير!");
+                }
+            });
+
+            uRef.child('expenses').on('value', s => { if(s.exists()){ expenses = normalizeFirebaseList(s.val()); localStorage.setItem('myExpensesData', JSON.stringify(expenses)); renderExpenses(); } });
+            uRef.child('suppliers').on('value', s => { if(s.exists()){ suppliers = normalizeFirebaseList(s.val()); localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); renderSuppliers(); } });
+            uRef.child('inventoryLog').on('value', s => { if(s.exists()){ inventoryLog = normalizeFirebaseList(s.val()); localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); } });
+            uRef.child('employees').on('value', s => { if(s.exists()){ employees = normalizeFirebaseList(s.val()); localStorage.setItem('myEmployeesData', JSON.stringify(employees)); renderEmployees(); } });
+            uRef.child('suspendedInvoices').on('value', s => { if(s.exists()){ suspendedInvoices = normalizeFirebaseList(s.val()); localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); updateSuspendedCount(); } });
+            uRef.child('settings').on('value', s => {
+                if(s.exists()){
+                    let d = s.val();
+                    Object.assign(settings, d);
+                    localStorage.setItem('mySettingsData', JSON.stringify(settings));
+                    initSettings();
+                    updateBranchBadge();
+                }
+            });
+
+            setTimeout(() => { runAutoCloudBackup(false); }, 3500);
+        }
+
+        function shieldUploadLocalToCloud() {
+            if (!currentUser) return;
+            window.__allowEmptySync = true;
+            syncAllToCloud();
+            window.__allowEmptySync = false;
+            if (items.length > 0) localStorage.setItem('lastSafeCount_items', String(items.length));
+            if (archive.length > 0) localStorage.setItem('lastSafeCount_archive', String(archive.length));
+            document.getElementById('shieldModal').classList.remove('active');
+            document.getElementById('overlay').style.display = 'none';
+            const uRef = firebase.database().ref('users/' + currentUser.uid);
+            attachRealtimeCloudListeners(uRef);
+            runAutoCloudBackup(true);
+            showToast(`🛡️✅ تم رفع (${items.length} مادة و ${archive.length} وصل) إلى السحابة وحمايتها!`);
+        }
+
+        function shieldAcceptEmptyCloud() {
+            if (!confirm("⚠️ تحذير أخير: هل أنت متأكد 100% من تجاهل بيانات الجهاز والبدء من سحابة فارغة؟\n(سيتم تنزيل نسخة احتياطية على جهازك تلقائياً قبل المتابعة)")) return;
+            exportBackup();
+            window.__allowEmptySync = true;
+            items = []; archive = []; expenses = []; suppliers = []; inventoryLog = []; employees = []; suspendedInvoices = [];
+            localStorage.setItem('myPricesData', '[]');
+            localStorage.setItem('myArchiveData', '[]');
+            localStorage.setItem('lastSafeCount_items', '0');
+            localStorage.setItem('lastSafeCount_archive', '0');
+            document.getElementById('shieldModal').classList.remove('active');
+            document.getElementById('overlay').style.display = 'none';
+            const uRef = firebase.database().ref('users/' + currentUser.uid);
+            attachRealtimeCloudListeners(uRef);
+            setTimeout(() => { window.__allowEmptySync = false; }, 2000);
+            renderItems(); renderArchive(); renderDebts();
+        }
+
+        function cancelCrossBranchLogin() {
+            pendingCrossBranchUser = null;
+            document.getElementById('branchLockModal').classList.remove('active');
+            document.getElementById('overlay').style.display = 'none';
+            if (isCloudReady) firebase.auth().signOut();
+            showToast("تم إلغاء الدخول والحفاظ على بيانات الفرع الأصلي.");
+        }
+
+        function confirmSwitchBranchSafely() {
+            if (!pendingCrossBranchUser) return;
+            // 1. Export previous branch local data automatically before clearing
+            try {
+                const prevEmail = (localStorage.getItem('lockedBranchEmail') || 'Previous_Branch').replace(/[^a-zA-Z0-9._-]/g, '_');
+                const prevBackup = {
+                    items: JSON.parse(localStorage.getItem('myPricesData') || '[]'),
+                    archive: JSON.parse(localStorage.getItem('myArchiveData') || '[]'),
+                    expenses: JSON.parse(localStorage.getItem('myExpensesData') || '[]'),
+                    suppliers: JSON.parse(localStorage.getItem('mySuppliersData') || '[]'),
+                    inventoryLog: JSON.parse(localStorage.getItem('myInventoryLog') || '[]'),
+                    employees: JSON.parse(localStorage.getItem('myEmployeesData') || '[]'),
+                    suspendedInvoices: JSON.parse(localStorage.getItem('mySuspendedData') || '[]'),
+                    settings: JSON.parse(localStorage.getItem('mySettingsData') || '{}')
+                };
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([JSON.stringify(prevBackup, null, 2)], { type: 'application/json' }));
+                a.download = `SwitchBranch_Backup_${prevEmail}_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+            } catch(e) {}
+
+            // 2. Clear previous branch working keys safely
+            ['myPricesData','myArchiveData','myExpensesData','mySuppliersData','myInventoryLog','myEmployeesData','mySuspendedData','mySettingsData','myInvoiceTabs','myActiveTabIndex','lastSafeCount_items','lastSafeCount_archive'].forEach(k => localStorage.removeItem(k));
+            items = []; archive = []; expenses = []; suppliers = []; inventoryLog = []; employees = []; suspendedInvoices = [];
+            settings.branchName = "";
+            localStorage.removeItem('lockedBranchName');
+
+            const nextUser = pendingCrossBranchUser;
+            pendingCrossBranchUser = null;
+            document.getElementById('branchLockModal').classList.remove('active');
+            document.getElementById('overlay').style.display = 'none';
+            proceedWithAuthenticatedUser(nextUser);
+        }
+
+        function proceedWithAuthenticatedUser(user) {
+            currentUser = user;
+            cloudListenersAttached = false;
+            localStorage.setItem('lockedBranchUid', user.uid);
+            localStorage.setItem('lockedBranchEmail', user.email || '');
+
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+
+            // Load local vault first so local cache is always preserved
+            loadLocalVaultData();
+            applyRoleRestrictions();
+            updateBranchBadge();
+
+            const db = firebase.database();
+            let uRef = db.ref('users/' + currentUser.uid);
+
+            // Integrity Shield Check before attaching live overwrite listeners
+            uRef.once('value').then(snap => {
+                const cloudItems = normalizeFirebaseList(snap.child('items').val());
+                const cloudArchive = normalizeFirebaseList(snap.child('archive').val());
+                const localHasData = (items.length > 0 || archive.length > 0);
+                const cloudHasData = (cloudItems.length > 0 || cloudArchive.length > 0);
+
+                if (localHasData && !cloudHasData) {
+                    const bodyEl = document.getElementById('shieldModalBody');
+                    if (bodyEl) {
+                        bodyEl.innerHTML = `
+                            <div style="background:rgba(40,167,69,0.1); border:1px solid #28a745; padding:12px; border-radius:8px; margin-bottom:10px;">
+                                <b>✅ بيانات محفوظة على هذا الجهاز:</b><br>
+                                • عدد المواد: <b>${items.length}</b> مادة<br>
+                                • عدد الوصولات: <b>${archive.length}</b> وصل
+                            </div>
+                            <p style="margin:0;">قاعدة البيانات السحابية للحساب (<b>${currentUser.email || ''}</b>) فارغة حالياً. قام الدرع بحماية بياناتك ومنع مسحها. اضغط الزر الأخضر لرفعها ومزامنتها فوراً:</p>
+                        `;
+                    }
+                    document.getElementById('overlay').style.display = 'block';
+                    document.getElementById('shieldModal').classList.add('active');
+                    return;
+                }
+
+                attachRealtimeCloudListeners(uRef);
+                showToast("تم تسجيل الدخول والمزامنة السحابية بأمان!");
+            }).catch(err => {
+                attachRealtimeCloudListeners(uRef);
+            });
+        }
+
         if(isCloudReady) {
+            updateAuthLockedBanner();
             firebase.auth().onAuthStateChanged(user => {
                 if (user) {
-                    currentUser = user; 
-                    document.getElementById('auth-screen').style.display = 'none'; 
-                    document.getElementById('main-app').style.display = 'block'; 
-                    applyRoleRestrictions();
-                    
-                    const db = firebase.database(); 
-                    let uRef = db.ref('users/' + currentUser.uid);
-                    
-                    uRef.child('items').on('value', s => { if(s.exists()){ items = s.val(); localStorage.setItem('myPricesData', JSON.stringify(items)); renderItems(); } });
-                    uRef.child('archive').on('value', s => { if(s.exists()){ archive = s.val(); localStorage.setItem('myArchiveData', JSON.stringify(archive)); renderArchive(); renderDebts(); updateCustomerDropdown(); } });
-                    uRef.child('expenses').on('value', s => { if(s.exists()){ expenses = s.val(); localStorage.setItem('myExpensesData', JSON.stringify(expenses)); renderExpenses(); } });
-                    uRef.child('suppliers').on('value', s => { if(s.exists()){ suppliers = s.val(); localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); renderSuppliers(); } });
-                    uRef.child('inventoryLog').on('value', s => { if(s.exists()){ inventoryLog = s.val(); localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); } }); 
-                    uRef.child('employees').on('value', s => { if(s.exists()){ employees = s.val(); localStorage.setItem('myEmployeesData', JSON.stringify(employees)); renderEmployees(); } }); 
-                    uRef.child('suspendedInvoices').on('value', s => { if(s.exists()){ suspendedInvoices = s.val(); localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); updateSuspendedCount(); } }); 
-                    uRef.child('settings').on('value', s => { if(s.exists()){ let d = s.val(); Object.assign(settings, d); localStorage.setItem('mySettingsData', JSON.stringify(settings)); initSettings(); } });
-                    
-                    showToast("تم تسجيل الدخول والمزامنة السحابية!");
+                    const lockedUid = localStorage.getItem('lockedBranchUid');
+                    const counts = getRawLocalStorageCounts();
+                    const hasExistingLocalData = (counts.itemsCount > 0 || counts.archiveCount > 0);
+
+                    if (lockedUid && lockedUid !== user.uid && hasExistingLocalData) {
+                        pendingCrossBranchUser = user;
+                        const prevEmail = localStorage.getItem('lockedBranchEmail') || 'حساب فرع سابق';
+                        const prevName = localStorage.getItem('lockedBranchName') || prevEmail;
+                        const lockBody = document.getElementById('branchLockModalBody');
+                        if (lockBody) {
+                            lockBody.innerHTML = `
+                                <p style="margin-top:0;">هذا الجهاز مقفل حالياً على بيانات: <b style="color:#0b4a8f;">${prevName}</b> (${counts.itemsCount} مادة | ${counts.archiveCount} وصل).</p>
+                                <p>وأنت تحاول الدخول الآن بحساب مختلف: <b style="color:#dc3545;">${user.email || user.uid}</b>.</p>
+                                <p style="background:rgba(255,193,7,0.15); padding:8px; border-radius:6px; font-size:13px; margin-bottom:0;">🛡️ لحماية بيانات الفرعين من الاختلاط أو المسح، تم إيقاف المزامنة التلقائية. اختر الإجراء المناسب:</p>
+                            `;
+                        }
+                        document.getElementById('auth-screen').style.display = 'none';
+                        document.getElementById('main-app').style.display = 'block';
+                        document.getElementById('overlay').style.display = 'block';
+                        document.getElementById('branchLockModal').classList.add('active');
+                        return;
+                    }
+
+                    proceedWithAuthenticatedUser(user);
                 } else { 
                     currentUser = null; 
+                    cloudListenersAttached = false;
+                    updateAuthLockedBanner();
                     if(!navigator.onLine) {
                         enterAppOfflineMode();
                     } else {
@@ -989,6 +1316,7 @@
             document.getElementById('main-app').style.display = 'block'; 
             loadLocalVaultData();
             applyRoleRestrictions();
+            updateBranchBadge();
         }
     }
 
@@ -1041,10 +1369,9 @@
     }
     
     function logoutApp() { 
-        if(confirm("تأكيد تسجيل الخروج؟")) { 
+        if(confirm("تأكيد تسجيل الخروج؟\n(ستبقى بيانات هذا الفرع محفوظة ومحمية على هذا الجهاز لحين عودتك لنفس الحساب)")) { 
             if(isCloudReady) firebase.auth().signOut();
-            localStorage.clear(); 
-            window.location.reload(); 
+            setTimeout(() => { window.location.reload(); }, 250);
         } 
     }
 
@@ -1129,6 +1456,16 @@
 
     function syncCloud(node, data) { 
         if(isCloudReady && currentUser && navigator.onLine) {
+            if ((node === 'items' || node === 'archive') && Array.isArray(data)) {
+                const lastSafe = parseInt(localStorage.getItem('lastSafeCount_' + node) || '0', 10);
+                if (data.length === 0 && lastSafe > 2 && !window.__allowEmptySync) {
+                    showToast("🛡️ درع الحماية منع مسح البيانات السحابية!");
+                    return;
+                }
+                if (data.length > 0) {
+                    localStorage.setItem('lastSafeCount_' + node, String(data.length));
+                }
+            }
             firebase.database().ref('users/' + currentUser.uid + '/' + node).set(data); 
         }
     }
@@ -1143,6 +1480,146 @@
         syncCloud('suspendedInvoices', suspendedInvoices); 
         syncCloud('settings', settings); 
         syncAllPortalsToCloud();
+    }
+
+    function forcePushLocalToCloud() {
+        if (!isCloudReady || !currentUser || !navigator.onLine) {
+            alert("⚠️ يجب أن تكون متصلاً بالإنترنت ومسجلاً للدخول.");
+            return;
+        }
+        if (!confirm(`هل تريد رفع بيانات هذا الجهاز (${items.length} مادة و ${archive.length} وصل) إلى السحابة وتحديثها؟`)) return;
+        window.__allowEmptySync = true;
+        syncAllToCloud();
+        window.__allowEmptySync = false;
+        runAutoCloudBackup(true);
+        showToast("✅ تم فرض رفع جميع بيانات الجهاز للسحابة بنجاح!");
+    }
+
+    function getTodayIsoKey() {
+        const d = new Date();
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function runAutoCloudBackup(forceManual = false) {
+        if (!isCloudReady || !currentUser || !navigator.onLine) return;
+        if (items.length === 0 && archive.length === 0) {
+            if (forceManual) alert("⚠️ لا توجد بيانات حالياً لأخذ نسخة احتياطية منها.");
+            return;
+        }
+        const todayKey = getTodayIsoKey();
+        const doneFlagKey = `autoBackupDone_${currentUser.uid}_${todayKey}`;
+        if (!forceManual && localStorage.getItem(doneFlagKey) === '1') return;
+
+        const backupRef = firebase.database().ref(`users/${currentUser.uid}/auto_backups`);
+        const snapshotPayload = {
+            dateKey: todayKey,
+            timestamp: new Date().toLocaleString('en-GB'),
+            branchName: (settings.branchName || currentUser.email || 'الفرع').trim(),
+            itemsCount: items.length,
+            archiveCount: archive.length,
+            suppliersCount: suppliers.length,
+            data: {
+                items, archive, expenses, suppliers, inventoryLog, employees, suspendedInvoices, settings
+            }
+        };
+
+        backupRef.child(todayKey).set(snapshotPayload).then(() => {
+            localStorage.setItem(doneFlagKey, '1');
+            if (forceManual) showToast(`☁️✅ تم حفظ نسخة سحابية بتاريخ ${todayKey}!`);
+            // Keep only last 14 daily backups
+            backupRef.once('value').then(allSnap => {
+                if (!allSnap.exists()) return;
+                const keys = Object.keys(allSnap.val()).sort();
+                if (keys.length > 14) {
+                    keys.slice(0, keys.length - 14).forEach(oldKey => {
+                        backupRef.child(oldKey).remove();
+                    });
+                }
+            });
+        }).catch(err => {
+            if (forceManual) alert("تعذر حفظ النسخة السحابية: " + err.message);
+        });
+    }
+
+    function openCloudBackupsModal() {
+        if (!isCloudReady || !currentUser || !navigator.onLine) {
+            alert("⚠️ يرجى الاتصال بالإنترنت لعرض النسخ السحابية.");
+            return;
+        }
+        const cont = document.getElementById('cloudBackupsContainer');
+        cont.innerHTML = "<p style='text-align:center; padding:15px;'>⏳ جاري جلب النسخ الاحتياطية من السحابة...</p>";
+        document.getElementById('overlay').style.display = 'block';
+        setTimeout(() => { document.getElementById('cloudBackupsModal').classList.add('active'); }, 10);
+
+        firebase.database().ref(`users/${currentUser.uid}/auto_backups`).once('value').then(snap => {
+            if (!snap.exists()) {
+                cont.innerHTML = "<p style='text-align:center; color:var(--sub-text); padding:15px;'>لا توجد نسخ سحابية محفوظة بعد. اضغط على (أخذ نسخة احتياطية سحابية الآن) لحفظ أول نسخة.</p>";
+                return;
+            }
+            const all = snap.val();
+            const keys = Object.keys(all).sort().reverse();
+            let html = "";
+            keys.forEach(k => {
+                const entry = all[k];
+                html += `
+                    <div class="item-card" style="border-right-color:#28a745; margin-bottom:8px;">
+                        <div class="item-info">
+                            <h4 style="margin:0 0 4px 0; color:#0b4a8f;">📅 نسخة يوم: ${entry.dateKey || k}</h4>
+                            <p style="font-size:12px; margin:0;">🏢 ${entry.branchName || ''} | 🕒 ${entry.timestamp || ''}</p>
+                            <p style="font-size:12px; color:#28a745; margin:4px 0 0 0;">📦 المواد: <b>${entry.itemsCount || 0}</b> | 🧾 الوصولات: <b>${entry.archiveCount || 0}</b></p>
+                        </div>
+                        <button class="pay-btn" style="padding:8px 12px; font-size:13px;" onclick="restoreCloudBackupByKey('${k}')">🔄 استرجاع</button>
+                    </div>`;
+            });
+            cont.innerHTML = html;
+        }).catch(err => {
+            cont.innerHTML = `<p style='text-align:center; color:#dc3545;'>خطأ في جلب النسخ: ${err.message}</p>`;
+        });
+    }
+
+    function restoreCloudBackupByKey(dateKey) {
+        if (!confirm(`هل تريد استرجاع بيانات نسخة يوم (${dateKey})؟
+سيتم استبدال البيانات الحالية ببيانات هذا التاريخ ومزامنتها.`)) return;
+        firebase.database().ref(`users/${currentUser.uid}/auto_backups/${dateKey}`).once('value').then(snap => {
+            if (!snap.exists() || !snap.val().data) {
+                alert("⚠️ النسخة غير صالحة!");
+                return;
+            }
+            const d = snap.val().data;
+            window.__allowEmptySync = true;
+            items = normalizeFirebaseList(d.items);
+            archive = normalizeFirebaseList(d.archive);
+            expenses = normalizeFirebaseList(d.expenses);
+            suppliers = normalizeFirebaseList(d.suppliers);
+            inventoryLog = normalizeFirebaseList(d.inventoryLog);
+            employees = normalizeFirebaseList(d.employees);
+            suspendedInvoices = normalizeFirebaseList(d.suspendedInvoices);
+            if (d.settings) Object.assign(settings, d.settings);
+
+            localStorage.setItem('myPricesData', JSON.stringify(items));
+            localStorage.setItem('myArchiveData', JSON.stringify(archive));
+            localStorage.setItem('myExpensesData', JSON.stringify(expenses));
+            localStorage.setItem('mySuppliersData', JSON.stringify(suppliers));
+            localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog));
+            localStorage.setItem('myEmployeesData', JSON.stringify(employees));
+            localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices));
+            localStorage.setItem('mySettingsData', JSON.stringify(settings));
+
+            syncAllToCloud();
+            window.__allowEmptySync = false;
+
+            initSettings();
+            updateBranchBadge();
+            renderItems();
+            renderArchive();
+            renderDebts();
+            updateCustomerDropdown();
+            closeModals();
+            showToast(`✅ تم استرجاع نسخة يوم (${dateKey}) بنجاح!`);
+        });
     }
     
     function logInventory(itemName, type, qtyChange, note) { 
@@ -1161,7 +1638,7 @@
     });
     
     function closeModals() {  
-        const modals = ["addModal", "invoiceModal", "payModal", "historyModal", "itemHistoryModal", "empModal", "empAdjustModal", "suspendedModal", "supImageModal", "lowStockModal", "pinModal", "generalPayModal"];
+        const modals = ["addModal", "invoiceModal", "payModal", "historyModal", "itemHistoryModal", "empModal", "empAdjustModal", "suspendedModal", "supImageModal", "lowStockModal", "pinModal", "generalPayModal", "cloudBackupsModal"];
         modals.forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove("active"); });
         
         setTimeout(() => { 
@@ -1174,6 +1651,7 @@
 
     function initSettings() { 
         document.documentElement.style.setProperty('--bg-logo', `url('${settings.logo}')`); 
+        if(document.getElementById('setBranchName')) document.getElementById('setBranchName').value = settings.branchName || "";
         if(document.getElementById('setCurrencyMode')) document.getElementById('setCurrencyMode').value = settings.currencyMode || "dual";
         document.getElementById('setUsdRate').value = settings.usdRate; 
         if(document.getElementById('setDebtLimit')) document.getElementById('setDebtLimit').value = settings.debtLimit || 0;
@@ -1218,6 +1696,10 @@
 
     function saveSettings() { 
         if(currentRole !== 'admin') return alert("صلاحية الإدارة فقط!");
+        if(document.getElementById('setBranchName')) {
+            settings.branchName = document.getElementById('setBranchName').value.trim();
+            localStorage.setItem('lockedBranchName', settings.branchName);
+        }
         settings.currencyMode = document.getElementById('setCurrencyMode').value || "dual";
         settings.usdRate = document.getElementById('setUsdRate').value; 
         settings.debtLimit = parseFloat(document.getElementById('setDebtLimit').value) || 0;
@@ -1230,7 +1712,8 @@
         localStorage.setItem('mySettingsData', JSON.stringify(settings)); 
         syncCloud('settings', settings); 
         initSettings(); 
-        showToast("تم حفظ الإعدادات بنجاح!"); 
+        updateBranchBadge();
+        showToast("تم حفظ الإعدادات وهوية الفرع بنجاح!"); 
     }  
 
     function bulkUpdatePrices() {
@@ -3440,7 +3923,7 @@
     
     function exportBackup() { let allData = { items, archive, expenses, suppliers, inventoryLog, employees, suspendedInvoices, settings }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData)); const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "Aljelibawi_Full_Backup.json"); dl.click(); showToast("تم الحفظ الشامل محلياً!"); }  
     
-    function importBackup(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const imp = JSON.parse(e.target.result); if(Array.isArray(imp)) { items = imp; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } else { if(imp.items) { items = imp.items; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } if(imp.archive) { archive = imp.archive; localStorage.setItem('myArchiveData', JSON.stringify(archive)); syncCloud('archive', archive); syncAllPortalsToCloud(); } if(imp.expenses) { expenses = imp.expenses; localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses); } if(imp.suppliers) { suppliers = imp.suppliers; localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); syncCloud('suppliers', suppliers); } if(imp.inventoryLog) { inventoryLog = imp.inventoryLog; localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); syncCloud('inventoryLog', inventoryLog); } if(imp.employees) { employees = imp.employees; localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); } if(imp.suspendedInvoices) { suspendedInvoices = imp.suspendedInvoices; localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); syncCloud('suspendedInvoices', suspendedInvoices); updateSuspendedCount(); } if(imp.settings) { Object.assign(settings, imp.settings); localStorage.setItem('mySettingsData', JSON.stringify(settings)); syncCloud('settings', settings); initSettings();} } renderItems(); updateCustomerDropdown(); showToast("تم الاسترجاع بنجاح!"); } catch (err) { alert("ملف غير صالح!"); } }; reader.readAsText(file); event.target.value = ''; }  
+    function importBackup(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { window.__allowEmptySync = true; const imp = JSON.parse(e.target.result); if(Array.isArray(imp)) { items = imp; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } else { if(imp.items) { items = imp.items; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } if(imp.archive) { archive = imp.archive; localStorage.setItem('myArchiveData', JSON.stringify(archive)); syncCloud('archive', archive); syncAllPortalsToCloud(); } if(imp.expenses) { expenses = imp.expenses; localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses); } if(imp.suppliers) { suppliers = imp.suppliers; localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); syncCloud('suppliers', suppliers); } if(imp.inventoryLog) { inventoryLog = imp.inventoryLog; localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); syncCloud('inventoryLog', inventoryLog); } if(imp.employees) { employees = imp.employees; localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); } if(imp.suspendedInvoices) { suspendedInvoices = imp.suspendedInvoices; localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); syncCloud('suspendedInvoices', suspendedInvoices); updateSuspendedCount(); } if(imp.settings) { Object.assign(settings, imp.settings); localStorage.setItem('mySettingsData', JSON.stringify(settings)); syncCloud('settings', settings); initSettings();} } window.__allowEmptySync = false; updateBranchBadge(); renderItems(); updateCustomerDropdown(); showToast("تم الاسترجاع بنجاح!"); } catch (err) { window.__allowEmptySync = false; alert("ملف غير صالح!"); } }; reader.readAsText(file); event.target.value = ''; }  
     
     function annualArchiving() {
         if(currentRole !== 'admin') { alert("هذه الصلاحية للمدير فقط!"); return; }
@@ -3459,11 +3942,13 @@
 
             let newInventoryLog = inventoryLog.slice(0, 100);
 
+            window.__allowEmptySync = true;
             archive = newArchive;
             inventoryLog = newInventoryLog;
 
             localStorage.setItem('myArchiveData', JSON.stringify(archive));
             syncCloud('archive', archive);
+            window.__allowEmptySync = false;
             
             localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog));
             syncCloud('inventoryLog', inventoryLog);
@@ -3516,5 +4001,691 @@
         setTimeout(() => { window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank"); }, 800); 
     }
 </script> 
+<!-- ========================================================= -->
+<!-- 🤖 المساعد التنفيذي بالصوت واللهجة العراقية (AI Copilot) -->
+<!-- ========================================================= -->
+<style>
+  .copilot-fab {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 9990;
+    background: linear-gradient(135deg, #0b4a8f 0%, #17a2b8 100%);
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: bold;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 15px rgba(11, 74, 143, 0.45);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .copilot-fab:active { transform: scale(0.95); }
+  .copilot-fab.listening {
+    background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+    animation: copilotPulse 1.2s infinite;
+  }
+  @keyframes copilotPulse {
+    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+    70% { box-shadow: 0 0 0 14px rgba(220, 53, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+  }
+
+  .copilot-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+  }
+  .copilot-modal {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 650px;
+    margin: 0 auto;
+    max-height: 88vh;
+    overflow-y: auto;
+    background: var(--card-bg, #1e1e2f);
+    color: var(--text-color, #ffffff);
+    border-top-left-radius: 22px;
+    border-top-right-radius: 22px;
+    border-top: 3px solid #17a2b8;
+    padding: 18px;
+    z-index: 9999;
+    box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.5);
+    direction: rtl;
+  }
+  .copilot-modal.active { display: block; animation: slideUpCopilot 0.25s ease-out; }
+  @keyframes slideUpCopilot {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .copilot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.12));
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+  .copilot-mic-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 14px;
+    background: rgba(23, 162, 184, 0.08);
+    border: 1px dashed #17a2b8;
+    margin-bottom: 12px;
+  }
+  .copilot-big-mic {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #0b4a8f, #17a2b8);
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
+    transition: all 0.2s;
+  }
+  .copilot-big-mic.recording {
+    background: #dc3545;
+    animation: copilotPulse 1s infinite;
+    transform: scale(1.08);
+  }
+  .copilot-input-row {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    margin-top: 6px;
+  }
+  .copilot-input-row input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color, #444);
+    background: var(--bg-color, #141422);
+    color: var(--text-color, #fff);
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .copilot-chips {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+  .copilot-chip {
+    white-space: nowrap;
+    background: rgba(11, 74, 143, 0.18);
+    color: #4dabf7;
+    border: 1px solid rgba(77, 171, 247, 0.35);
+    border-radius: 20px;
+    padding: 5px 11px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .copilot-result-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+    border-right: 4px solid #28a745;
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .copilot-action-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .copilot-action-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 9px 10px;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: center;
+  }
+  @media print {
+    .copilot-fab, .copilot-backdrop, .copilot-modal { display: none !important; }
+  }
+</style>
+
+<!-- زر المايكروفون العائم -->
+<button id="copilotFabBtn" class="copilot-fab" onclick="openCopilotModal()" title="المساعد الصوتي الذكي">
+  <span>🎙️</span>
+  <span>اسأل المساعد</span>
+</button>
+
+<!-- خلفية ونافذة المساعد التنفيذي -->
+<div id="copilotBackdrop" class="copilot-backdrop" onclick="closeCopilotModal()"></div>
+<div id="copilotModal" class="copilot-modal">
+  <div class="copilot-header">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span style="font-size:22px;">🤖</span>
+      <div>
+        <h3 style="margin:0; font-size:16px; color:#17a2b8;">المساعد التنفيذي الذكي (عراقي)</h3>
+        <span style="font-size:11px; opacity:0.75;">تحليل فوري للديون، الأرباح، المخزن، والكشوفات</span>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:6px;">
+      <button id="copilotTtsBtn" onclick="toggleCopilotTTS()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:inherit; border-radius:8px; padding:5px 8px; font-size:12px; cursor:pointer;" title="تفعيل/إيقاف النطق الصوتي">🔊 صوت: مفعل</button>
+      <button onclick="closeCopilotModal()" style="background:#dc3545; border:none; color:#fff; border-radius:8px; padding:5px 10px; font-weight:bold; cursor:pointer;">✖</button>
+    </div>
+  </div>
+
+  <div class="copilot-mic-box">
+    <button id="copilotBigMic" class="copilot-big-mic" onclick="toggleCopilotVoice()">🎙️</button>
+    <div id="copilotStatusText" style="font-size:13px; font-weight:bold; color:#17a2b8; text-align:center;">
+      اضغط على المايكروفون وتكلم باللهجة العراقية...
+    </div>
+    <div class="copilot-input-row">
+      <input type="text" id="copilotTextInput" placeholder="أو اكتب سؤالك هنا (مثلاً: شكد يطلبنا فلان؟)" onkeydown="if(event.key==='Enter') runCopilotText()">
+      <button onclick="runCopilotText()" style="background:#0b4a8f; color:#fff; border:none; border-radius:10px; padding:0 16px; font-weight:bold; cursor:pointer;">بحث</button>
+    </div>
+  </div>
+
+  <!-- اختصارات سريعة بلمسة واحدة -->
+  <div class="copilot-chips">
+    <button class="copilot-chip" onclick="askCopilotPreset('منو الزبائن المتأخرين أكثر من 30 يوم؟')">⏰ المتأخرين +30 يوم</button>
+    <button class="copilot-chip" onclick="askCopilotPreset('شنو أكثر مادة ربحتنا هذا الشهر؟')">🏆 الأكثر ربحاً هالشهر</button>
+    <button class="copilot-chip" onclick="askCopilotPreset('شكد مبيعات وأرباح اليوم؟')">📊 ملخص اليوم والقاصة</button>
+    <button class="copilot-chip" onclick="askCopilotPreset('شكد النا ديون بالسوق؟')">💰 إجمالي ديون السوق</button>
+    <button class="copilot-chip" onclick="askCopilotPreset('شنو النواقص بالمخزن؟')">⚠️ نواقص المخزن</button>
+    <button class="copilot-chip" onclick="askCopilotPreset('شكد تطلبنا الشركات؟')">🏢 ديون الشركات</button>
+  </div>
+
+  <!-- منطقة عرض النتيجة الذكية -->
+  <div id="copilotOutputArea"></div>
+</div>
+
+<script>
+  let copilotRecognition = null;
+  let copilotIsListening = false;
+  let copilotTtsEnabled = true;
+
+  function openCopilotModal() {
+    document.getElementById('copilotBackdrop').style.display = 'block';
+    document.getElementById('copilotModal').classList.add('active');
+    setTimeout(() => { toggleCopilotVoice(); }, 250);
+  }
+
+  function closeCopilotModal() {
+    if (copilotRecognition && copilotIsListening) {
+      try { copilotRecognition.stop(); } catch(e) {}
+    }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    document.getElementById('copilotBackdrop').style.display = 'none';
+    document.getElementById('copilotModal').classList.remove('active');
+  }
+
+  function toggleCopilotTTS() {
+    copilotTtsEnabled = !copilotTtsEnabled;
+    const btn = document.getElementById('copilotTtsBtn');
+    btn.innerText = copilotTtsEnabled ? '🔊 صوت: مفعل' : '🔇 صوت: صامت';
+    if (!copilotTtsEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
+  }
+
+  function speakCopilotArabic(text) {
+    if (!copilotTtsEnabled || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const cleanSpeech = text.replace(/[*#•📊💰⏰🏆⚠️🏢✅💬📋💵]/g, '').replace(/\n+/g, ' ، ');
+    const utter = new SpeechSynthesisUtterance(cleanSpeech);
+    utter.lang = 'ar-SA';
+    utter.rate = 1.05;
+    window.speechSynthesis.speak(utter);
+  }
+
+  function toggleCopilotVoice() {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      document.getElementById('copilotStatusText').innerText = '⚠️ المتصفح لا يدعم الصوت المباشر، اكتب سؤالك بالأسفل.';
+      document.getElementById('copilotTextInput').focus();
+      return;
+    }
+
+    if (copilotIsListening && copilotRecognition) {
+      copilotRecognition.stop();
+      return;
+    }
+
+    copilotRecognition = new SpeechRec();
+    copilotRecognition.lang = 'ar-IQ';
+    copilotRecognition.interimResults = true;
+    copilotRecognition.maxAlternatives = 1;
+
+    const micBtn = document.getElementById('copilotBigMic');
+    const fabBtn = document.getElementById('copilotFabBtn');
+    const statusEl = document.getElementById('copilotStatusText');
+
+    copilotRecognition.onstart = function() {
+      copilotIsListening = true;
+      micBtn.classList.add('recording');
+      fabBtn.classList.add('listening');
+      statusEl.innerHTML = '🔴 جاري الاستماع... تفضل اسأل الآن';
+    };
+
+    copilotRecognition.onresult = function(event) {
+      let transcript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      document.getElementById('copilotTextInput').value = transcript;
+      if (event.results[0].isFinal) {
+        processIraqiCopilotQuery(transcript);
+      }
+    };
+
+    copilotRecognition.onerror = function(e) {
+      copilotIsListening = false;
+      micBtn.classList.remove('recording');
+      fabBtn.classList.remove('listening');
+      statusEl.innerText = 'لم ألتقط الصوت بوضوح، اضغط المايكروفون مرة أخرى أو اكتب سؤالك.';
+    };
+
+    copilotRecognition.onend = function() {
+      copilotIsListening = false;
+      micBtn.classList.remove('recording');
+      fabBtn.classList.remove('listening');
+      if (statusEl.innerText.includes('جاري الاستماع')) {
+        statusEl.innerText = 'اضغط على المايكروفون لطرح سؤال آخر';
+      }
+    };
+
+    try {
+      copilotRecognition.start();
+    } catch(err) {
+      statusEl.innerText = 'تعذر تشغيل المايكروفون، تأكد من منح صلاحية الصوت للمتصفح.';
+    }
+  }
+
+  function runCopilotText() {
+    const q = document.getElementById('copilotTextInput').value.trim();
+    if (!q) return;
+    processIraqiCopilotQuery(q);
+  }
+
+  function askCopilotPreset(q) {
+    document.getElementById('copilotTextInput').value = q;
+    processIraqiCopilotQuery(q);
+  }
+
+  function normalizeArabicText(str) {
+    return (str || '')
+      .toLowerCase()
+      .replace(/[أإآ]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .replace(/چ/g, 'ج')
+      .replace(/گ/g, 'ك')
+      .replace(/[^\u0600-\u06FF0-9a-zA-Z\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function extractNumberFromIraqiText(normText, defaultVal) {
+    if (normText.includes('شهرين')) return 60;
+    if (normText.includes('شهر')) return 30;
+    if (normText.includes('اسبوعين')) return 14;
+    if (normText.includes('اسبوع')) return 7;
+    const m = normText.match(/\d+/);
+    return m ? parseInt(m[0], 10) : defaultVal;
+  }
+
+  function processIraqiCopilotQuery(rawQuery) {
+    const out = document.getElementById('copilotOutputArea');
+    const statusEl = document.getElementById('copilotStatusText');
+    const q = normalizeArabicText(rawQuery);
+    statusEl.innerHTML = `🗣️ سؤالك: <span style="color:#fff;">"${rawQuery}"</span>`;
+
+    // 1. الاستعلام عن الزبائن المتأخرين بالتسديد
+    if (q.includes('متاخر') || q.includes('تاخر') || q.includes('ما مسدد') || q.includes('صارله هواي') || q.includes('قديمه')) {
+      const daysLimit = extractNumberFromIraqiText(q, 30);
+      const grouped = {};
+
+      (archive || []).forEach(inv => {
+        const rem = parseFloat(inv.remaining) || 0;
+        if (rem > 0 && inv.type !== 'راجع' && inv.type !== 'تخمين') {
+          const cName = (inv.customer || 'زبون بدون اسم').trim();
+          let lastDate = inv.date;
+          if (inv.payments && Array.isArray(inv.payments) && inv.payments.length > 0) {
+            lastDate = inv.payments[inv.payments.length - 1].date || inv.date;
+          }
+          const daysPassed = typeof getDaysPassed === 'function' ? getDaysPassed(lastDate) : 0;
+          if (!grouped[cName]) {
+            grouped[cName] = { name: cName, phone: inv.phone || '', totalRem: 0, maxDays: 0, count: 0 };
+          }
+          grouped[cName].totalRem += rem;
+          grouped[cName].count += 1;
+          if (daysPassed > grouped[cName].maxDays) grouped[cName].maxDays = daysPassed;
+          if (!grouped[cName].phone && inv.phone) grouped[cName].phone = inv.phone;
+        }
+      });
+
+      const overdueList = Object.values(grouped)
+        .filter(c => c.maxDays >= daysLimit)
+        .sort((a, b) => b.totalRem - a.totalRem);
+
+      if (overdueList.length === 0) {
+        const msg = `ممتاز! لا يوجد أي زبون متأخر بالتسديد أكثر من ${daysLimit} يوماً حالياً.`;
+        out.innerHTML = `<div class="copilot-result-card">✅ <b>${msg}</b></div>`;
+        speakCopilotArabic(msg);
+        return;
+      }
+
+      const totalOverdueMoney = overdueList.reduce((s, c) => s + c.totalRem, 0);
+      let rowsHTML = '';
+      overdueList.slice(0, 10).forEach(c => {
+        const safeName = c.name.replace(/'/g, "\\'");
+        const safePhone = (c.phone || '').replace(/'/g, "\\'");
+        rowsHTML += `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+            <div>
+              <div style="font-weight:bold;">👤 ${c.name} <span style="background:#dc3545; color:#fff; font-size:11px; padding:2px 6px; border-radius:6px;">${c.maxDays} يوم</span></div>
+              <div style="font-size:13px; color:#ff6b6b; font-weight:bold;">المتبقي: ${formatDualAmountText(c.totalRem)}</div>
+            </div>
+            <button onclick="remindCustomerTotalDebt('${safeName}', '${safePhone}', ${c.totalRem})" style="background:#25D366; color:#fff; border:none; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:bold; cursor:pointer;">💬 تذكير</button>
+          </div>`;
+      });
+
+      out.innerHTML = `
+        <div class="copilot-result-card" style="border-right-color:#dc3545;">
+          <h4 style="margin:0 0 6px 0; color:#ff6b6b;">⏰ المتأخرون أكثر من ${daysLimit} يوم (${overdueList.length} زبون)</h4>
+          <p style="margin:0 0 10px 0; font-size:13px;">إجمالي مبالغهم المتأخرة: <b>${formatDualAmountHTML(totalOverdueMoney)}</b></p>
+          ${rowsHTML}
+        </div>`;
+      speakCopilotArabic(`يوجد ${overdueList.length} زبائن متأخرين أكثر من ${daysLimit} يوم، بإجمالي مبلغ ${Math.round(totalOverdueMoney)} دينار عراقي.`);
+      return;
+    }
+
+    // 2. أكثر مادة ربحاً أو مبيعاً
+    if (q.includes('اكثر ماده') || q.includes('ربحتنا') || q.includes('اكثر شي') || q.includes('الاكثر مبيعا') || q.includes('يمشي')) {
+      const isThisMonth = q.includes('شهر');
+      const now = new Date();
+      const curMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      const itemPerf = {};
+
+      (archive || []).forEach(inv => {
+        if (inv.type === 'تخمين') return;
+        if (isThisMonth && typeof parseDateGB === 'function') {
+          const d = parseDateGB(inv.date);
+          if (d) {
+            const mStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            if (mStr !== curMonth) return;
+          }
+        }
+        const mult = inv.type === 'راجع' ? -1 : 1;
+        (inv.items || []).forEach(itm => {
+          const name = itm.name || 'مادة';
+          if (!itemPerf[name]) itemPerf[name] = { name, qty: 0, sales: 0, profit: 0 };
+          const price = parseFloat(itm.price) || 0;
+          let cost = parseFloat(itm.cost) || 0;
+          if (cost === 0) {
+            const found = (items || []).find(i => i.name === name);
+            if (found) cost = parseFloat(found.cost) || 0;
+          }
+          const qty = parseFloat(itm.qty) || 0;
+          itemPerf[name].qty += qty * mult;
+          itemPerf[name].sales += (price * qty) * mult;
+          itemPerf[name].profit += ((price - cost) * qty) * mult;
+        });
+      });
+
+      const ranked = Object.values(itemPerf).sort((a, b) => b.profit - a.profit).slice(0, 5);
+      if (ranked.length === 0) {
+        const msg = 'لا توجد بيانات مبيعات كافية في هذه الفترة لتحليل الأرباح.';
+        out.innerHTML = `<div class="copilot-result-card">${msg}</div>`;
+        speakCopilotArabic(msg);
+        return;
+      }
+
+      let listHTML = '';
+      ranked.forEach((r, idx) => {
+        listHTML += `
+          <div style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+            <span><b>${idx + 1}. ${r.name}</b> <small style="opacity:0.75;">(الكمية: ${r.qty})</small></span>
+            <span style="color:#51cf66; font-weight:bold;">ربح: ${r.profit.toLocaleString()} د.ع</span>
+          </div>`;
+      });
+
+      const periodTitle = isThisMonth ? 'هذا الشهر' : 'الإجمالية';
+      out.innerHTML = `
+        <div class="copilot-result-card" style="border-right-color:#ffc107;">
+          <h4 style="margin:0 0 8px 0; color:#ffd43b;">🏆 أكثر 5 مواد تحقيقاً للربح (${periodTitle})</h4>
+          ${listHTML}
+        </div>`;
+      speakCopilotArabic(`أكثر مادة ربحتنا ${periodTitle} هي ${ranked[0].name} بصافي ربح ${Math.round(ranked[0].profit)} دينار، وبكمية ${ranked[0].qty}.`);
+      return;
+    }
+
+    // 3. ملخص اليوم / الشهر / القاصة
+    if (q.includes('اليوم') || q.includes('قاصه') || q.includes('عزليه') || q.includes('مبيعات') || q.includes('ربحنا')) {
+      const isMonth = q.includes('شهر');
+      const todayStr = new Date().toLocaleDateString('en-GB');
+      const now = new Date();
+      const curMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
+      const matchPeriod = (dateStr) => {
+        if (!isMonth) return dateStr === todayStr;
+        const d = typeof parseDateGB === 'function' ? parseDateGB(dateStr) : null;
+        if (!d) return false;
+        return (d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')) === curMonth;
+      };
+
+      let sales = 0, cashIn = 0, expTotal = 0, supPaid = 0, grossProfit = 0;
+
+      (archive || []).forEach(inv => {
+        if (inv.type === 'تخمين') return;
+        const mult = inv.type === 'راجع' ? -1 : 1;
+        if (matchPeriod(inv.date)) {
+          sales += (parseFloat(inv.total) || 0) * mult;
+          cashIn += (parseFloat(inv.paid) || 0) * mult;
+          let invProfit = 0;
+          (inv.items || []).forEach(itm => {
+            const p = parseFloat(itm.price) || 0;
+            let c = parseFloat(itm.cost) || 0;
+            if (c === 0) {
+              const real = (items || []).find(i => i.name === itm.name);
+              if (real) c = parseFloat(real.cost) || 0;
+            }
+            invProfit += (p - c) * (parseFloat(itm.qty) || 0);
+          });
+          grossProfit += (invProfit - (parseFloat(inv.discount) || 0)) * mult;
+        }
+        if (Array.isArray(inv.payments)) {
+          inv.payments.forEach(p => {
+            if (matchPeriod(p.date) && !matchPeriod(inv.date)) {
+              cashIn += (parseFloat(p.amount) || 0);
+            }
+          });
+        }
+      });
+
+      (expenses || []).forEach(e => {
+        if (!e.noteOnly && matchPeriod(e.date)) expTotal += (parseFloat(e.amount) || 0);
+      });
+      (suppliers || []).forEach(s => {
+        if (s.type === 'تسديد' && matchPeriod(s.date)) supPaid += (parseFloat(s.amount) || 0);
+      });
+
+      const netCash = cashIn - expTotal - supPaid;
+      const netProfit = grossProfit - expTotal;
+      const label = isMonth ? 'هذا الشهر' : `اليوم (${todayStr})`;
+
+      out.innerHTML = `
+        <div class="copilot-result-card" style="border-right-color:#17a2b8;">
+          <h4 style="margin:0 0 10px 0; color:#3bc9db;">📊 الملخص المالي لـ ${label}</h4>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:13px;">
+            <div style="background:rgba(255,255,255,0.05); padding:8px; border-radius:8px;">🔹 إجمالي المبيعات:<br><b>${formatDualAmountHTML(sales)}</b></div>
+            <div style="background:rgba(40,167,69,0.12); padding:8px; border-radius:8px;">💵 المقبوض نقداً:<br><b style="color:#51cf66;">${formatDualAmountHTML(cashIn)}</b></div>
+            <div style="background:rgba(220,53,69,0.12); padding:8px; border-radius:8px;">🔻 المصروفات:<br><b style="color:#ff6b6b;">${formatDualAmountHTML(expTotal)}</b></div>
+            <div style="background:rgba(255,193,7,0.12); padding:8px; border-radius:8px;">✨ صافي الربح:<br><b style="color:#ffd43b;">${formatDualAmountHTML(netProfit)}</b></div>
+          </div>
+          <div style="margin-top:10px; padding:10px; background:rgba(11,74,143,0.25); border-radius:8px; text-align:center;">
+            💰 صافي النقد المتبقي بالقاصة: <b style="font-size:16px; color:#4dabf7;">${formatDualAmountHTML(netCash)}</b>
+          </div>
+        </div>`;
+      speakCopilotArabic(`مبيعات ${label} هي ${Math.round(sales)} دينار، وصافي النقد المتبقي بالقاصة ${Math.round(netCash)} دينار.`);
+      return;
+    }
+
+    // 4. نواقص المخزن
+    if (q.includes('نواقص') || q.includes('خلصان') || q.includes('ناقص') || q.includes('قليل')) {
+      const low = (items || []).filter(i => i.stock !== undefined && i.stock !== '' && parseFloat(i.stock) <= 5);
+      if (low.length === 0) {
+        const msg = 'المخزن مكتمل حالياً ولا توجد أي مواد وصلت للحد الأدنى.';
+        out.innerHTML = `<div class="copilot-result-card">👍 <b>${msg}</b></div>`;
+        speakCopilotArabic(msg);
+        return;
+      }
+      let h = '';
+      low.slice(0, 12).forEach(i => {
+        const nSafe = i.name.replace(/'/g, "\\'");
+        const sSafe = (i.supplier || '').replace(/'/g, "\\'");
+        h += `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+                <span>🔸 <b>${i.name}</b> (المتبقي: <b style="color:#ff6b6b;">${i.stock}</b>)</span>
+                <button onclick="orderFromSupplier('${nSafe}','${sSafe}')" style="background:#25D366; color:#fff; border:none; border-radius:6px; padding:4px 8px; font-size:11px; cursor:pointer;">📱 اطلب</button>
+              </div>`;
+      });
+      out.innerHTML = `
+        <div class="copilot-result-card" style="border-right-color:#fd7e14;">
+          <h4 style="margin:0 0 8px 0; color:#ffa94d;">⚠️ نواقص المخزن (${low.length} مادة)</h4>
+          ${h}
+        </div>`;
+      speakCopilotArabic(`يوجد ${low.length} مواد ناقصة في المخزن، أبرزها ${low[0].name} المتبقي منها ${low[0].stock}.`);
+      return;
+    }
+
+    // 5. إجمالي ديون السوق أو الشركات
+    if (q.includes('شركات') || q.includes('مجهزين')) {
+      let supOwed = 0;
+      (suppliers || []).forEach(tx => {
+        if (tx.type === 'فاتورة') supOwed += (parseFloat(tx.amount) || 0);
+        else supOwed -= (parseFloat(tx.amount) || 0);
+      });
+      out.innerHTML = `
+        <div class="copilot-result-card" style="border-right-color:#fd7e14;">
+          <h4 style="margin:0 0 6px 0; color:#ffa94d;">🏢 إجمالي ديون الشركات والمجهزين</h4>
+          <div style="font-size:18px; font-weight:bold;">${formatDualAmountHTML(supOwed)}</div>
+        </div>`;
+      speakCopilotArabic(`إجمالي المطلوب للشركات والمجهزين حالياً هو ${Math.round(supOwed)} دينار.`);
+      return;
+    }
+
+    if (q.includes('ديون السوق') || q.includes('النا ديون') || q.includes('مجموع الديون') || q.includes('كل الديون')) {
+      let totalMarket = 0;
+      (archive || []).forEach(inv => {
+        const rem = parseFloat(inv.remaining) || 0;
+        if (rem > 0 && inv.type !== 'راجع' && inv.type !== 'تخمين') totalMarket += rem;
+      });
+      out.innerHTML = `
+        <div class="copilot-result-card" style="border-right-color:#dc3545;">
+          <h4 style="margin:0 0 6px 0; color:#ff6b6b;">💰 إجمالي الديون التي لنا في السوق</h4>
+          <div style="font-size:18px; font-weight:bold;">${formatDualAmountHTML(totalMarket)}</div>
+        </div>`;
+      speakCopilotArabic(`إجمالي الديون التي لنا في السوق حالياً هو ${Math.round(totalMarket)} دينار.`);
+      return;
+    }
+
+    // 6. البحث الذكي عن زبون محدد ("شكد يطلبنا فلان / حساب فلان")
+    const allCustomers = [...new Set((archive || []).map(a => (a.customer || '').trim()))]
+      .filter(c => c && c !== 'زبون نقدي');
+
+    const cleanedForEntity = q
+      .replace(/(شكد|كم|شقد|يطلبنا|نطلب|حساب|ذمه|بذمه|ديون|دين|كشف|الزبون|الاخ|السيد|باقي|سعر|مخزن|رصيد|من|ال)/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    let matchedCustomer = null;
+    if (cleanedForEntity.length >= 2) {
+      matchedCustomer = allCustomers.find(c => normalizeArabicText(c).includes(cleanedForEntity))
+        || allCustomers.find(c => cleanedForEntity.split(' ').some(w => w.length >= 3 && normalizeArabicText(c).includes(w)));
+    }
+
+    if (matchedCustomer) {
+      let bought = 0, paid = 0, rem = 0, count = 0, phone = '';
+      (archive || []).forEach(inv => {
+        if ((inv.customer || '').trim() === matchedCustomer && inv.type !== 'تخمين') {
+          const mult = inv.type === 'راجع' ? -1 : 1;
+          bought += (parseFloat(inv.total) || 0) * mult;
+          paid += (parseFloat(inv.paid) || 0) * mult;
+          rem += (parseFloat(inv.remaining) || 0) * mult;
+          count++;
+          if (!phone && inv.phone) phone = inv.phone;
+        }
+      });
+
+      const safeCust = matchedCustomer.replace(/'/g, "\\'");
+      const safePhone = phone.replace(/'/g, "\\'");
+
+      out.innerHTML = `
+        <div class="copilot-result-card" style="border-right-color:#0b4a8f;">
+          <h4 style="margin:0 0 8px 0; color:#4dabf7;">👤 ملخص حساب: ${matchedCustomer} (${count} قوائم)</h4>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>إجمالي المسحوبات:</span><b>${formatDualAmountHTML(bought)}</b></div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#51cf66;"><span>إجمالي التسديدات:</span><b>${formatDualAmountHTML(paid)}</b></div>
+          <div style="display:flex; justify-content:space-between; padding-top:6px; border-top:1px solid rgba(255,255,255,0.1); font-size:16px; color:${rem > 0 ? '#ff6b6b' : '#51cf66'};">
+            <span>المتبقي بذمته:</span><b>${formatDualAmountHTML(rem)}</b>
+          </div>
+          <div class="copilot-action-grid">
+            <button class="copilot-action-btn" style="background:#25D366;" onclick="remindCustomerTotalDebt('${safeCust}','${safePhone}',${rem})">💬 تذكير + رابط البوابة</button>
+            <button class="copilot-action-btn" style="background:#0b4a8f;" onclick="closeCopilotModal(); openCustomerStatementQuick('${safeCust}')">📋 فتح الكشف</button>
+            <button class="copilot-action-btn" style="background:#fd7e14;" onclick="closeCopilotModal(); openGeneralPayForCustomer('${safeCust}')">💵 تسديد دفعة</button>
+          </div>
+        </div>`;
+
+      const spokenRem = rem > 0 ? `المتبقي بذمة ${matchedCustomer} هو ${Math.round(rem)} دينار عراقي.` : `${matchedCustomer} حسابه مسدد بالكامل ولا يوجد بذمته أي دين.`;
+      speakCopilotArabic(spokenRem);
+      return;
+    }
+
+    // 7. البحث الذكي عن مادة في المخزن ("سعر أو كمية مادة")
+    let matchedItem = null;
+    if (cleanedForEntity.length >= 2) {
+      matchedItem = (items || []).find(i => normalizeArabicText(i.name).includes(cleanedForEntity))
+        || (items || []).find(i => cleanedForEntity.split(' ').some(w => w.length >= 3 && normalizeArabicText(i.name).includes(w)));
+    }
+
+    if (matchedItem) {
+      const st = (matchedItem.stock !== undefined && matchedItem.stock !== '') ? matchedItem.stock : 'غير محدد';
+      out.innerHTML = `
+        <div class="copilot-result-card" style="border-right-color:#28a745;">
+          <h4 style="margin:0 0 8px 0; color:#51cf66;">📦 مادة: ${matchedItem.name}</h4>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>سعر البيع:</span><b>${formatDualAmountHTML(matchedItem.price)}</b></div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>الرصيد بالمخزن:</span><b>${st} ${matchedItem.measure || ''}</b></div>
+          <div style="display:flex; justify-content:space-between;"><span>القسم:</span><b>${matchedItem.category || 'عام'}</b></div>
+        </div>`;
+      speakCopilotArabic(`مادة ${matchedItem.name}، سعرها ${matchedItem.price} دينار، والمتبقي بالمخزن ${st}.`);
+      return;
+    }
+
+    // رسالة مساعدة إذا لم يطابق السؤال اسماً محدداً
+    const fallbackMsg = 'لم أجد اسماً أو مادة مطابقة لسؤالك. جرب أن تقول: "شكد يطلبنا [اسم الزبون]" أو "سعر [اسم المادة]" أو اضغط أحد الأزرار الجاهزة بالأعلى.';
+    out.innerHTML = `<div class="copilot-result-card" style="border-right-color:#6c757d;">🤔 ${fallbackMsg}</div>`;
+    speakCopilotArabic('لم أجد اسماً مطابقاً، يرجى إعادة المحاولة بذكر اسم الزبون أو المادة بوضوح.');
+  }
+</script>
+<!-- ========================================================= -->
+
 </body>  
 </html>
