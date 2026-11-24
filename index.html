@@ -121,7 +121,7 @@
             #main-app { display: block !important; padding: 0 !important; }
             .modal { position: static !important; box-shadow: none !important; padding: 0 !important; background: transparent !important; display: block !important; max-height: none !important; overflow: visible !important; border-radius: 0 !important; } 
             
-            #shieldModal, #branchLockModal, #cloudBackupsModal, #addModal, #payModal, #historyModal, #itemHistoryModal, #empModal, #empAdjustModal, #suspendedModal, #supImageModal, #lowStockModal, #pinModal, #generalPayModal, .modal-header, .input-group, .btn-save, .btn-cancel, #invoiceTableContainer, #invoiceTotalsContainer, #invoiceActionButtons, #invoiceTabsContainer, #invoiceInputsForm, #debtLimitAlert { display: none !important; }  
+            #addModal, #payModal, #historyModal, #itemHistoryModal, #empModal, #empAdjustModal, #suspendedModal, #supImageModal, #lowStockModal, #pinModal, #generalPayModal, .modal-header, .input-group, .btn-save, .btn-cancel, #invoiceTableContainer, #invoiceTotalsContainer, #invoiceActionButtons, #invoiceTabsContainer, #invoiceInputsForm, #debtLimitAlert { display: none !important; }  
             
             .print-only { display: none !important; }
             .print-only.active-print { display: block !important; direction: rtl; font-family: 'Arial', sans-serif; padding: 10px; width: 100%; } 
@@ -185,7 +185,6 @@
         <h1 style="color:#f7941d; font-size:35px; margin:0 0 10px 0; text-shadow: 1px 1px 0 #0b4a8f;">فــــؤاد</h1>
         <h2>نظام الإدارة السحابي</h2>
         <p>يرجى تسجيل الدخول للوصول إلى بياناتك بأمان من أي جهاز.</p>
-        <div id="authLockedBranchBanner" style="display:none; background:rgba(255,193,7,0.18); border:1px solid #ffc107; color:#b8860b; padding:8px 10px; border-radius:8px; font-size:12px; font-weight:bold; margin-bottom:12px;"></div>
         <div class="input-group"><input type="email" id="authEmail" placeholder="البريد الإلكتروني (جيميل)"></div>
         <div class="input-group"><input type="password" id="authPass" placeholder="الرمز السري للحساب السحابي"></div>
         <div class="input-group" style="background:rgba(11,74,143,0.05); padding:8px; border-radius:8px; border:1px dashed #0b4a8f;">
@@ -202,7 +201,6 @@
     <div class="header">  
         <div class="header-title" id="appMainHeader">
             <span>فؤاد الچليباوي</span>
-            <span id="branchHeaderBadge" onclick="promptQuickBranchSelect()" title="اضغط لتحديد أو تغيير اسم الفرع" style="font-size:11px; padding:3px 9px; border-radius:12px; background:#0b4a8f; color:#ffc107; border:1px solid #ffc107; cursor:pointer; font-weight:bold;">🏛️ تحديد الفرع</span>
             <span id="networkStatus" style="font-size:11px; padding:2px 5px; border-radius:4px; background:#28a745; color:#fff;">🟢 متصل</span>
         </div>  
         <div class="header-actions">
@@ -379,22 +377,6 @@
         <div class="settings-container">
             <div class="item-card" style="flex-direction: column; align-items: stretch; gap: 15px;">
                 <h3 style="margin:0; border-bottom:1px solid var(--border-color); padding-bottom:10px;">⚙️ إعدادات الوصل والنظام</h3>
-                <div class="input-group" style="background:rgba(11,74,143,0.08); padding:12px; border-radius:8px; border:2px solid #0b4a8f;">
-                    <label style="color:#0b4a8f; font-size:15px;">🏢 هوية الفرع الحالي (يظهر أعلى الشاشة لمنع الخلط)</label>
-                    <div style="display:flex; gap:6px; margin-bottom:8px;">
-                        <button type="button" class="btn-main" style="background:#0b4a8f; color:#ffc107; border:1px solid #ffc107; padding:7px; font-size:12px;" onclick="setBranchPreset('معرض الواجهات')">🏛️ معرض الواجهات</button>
-                        <button type="button" class="btn-main" style="background:#17a2b8; color:#fff; padding:7px; font-size:12px;" onclick="setBranchPreset('محل الجبس بورد')">🧱 محل الجبس بورد</button>
-                    </div>
-                    <input type="text" id="setBranchName" placeholder="اكتب اسم الفرع (مثال: معرض الواجهات)">
-                    <p id="currentAccountEmailDisplay" style="font-size:11px; color:var(--sub-text); margin:5px 0 0 0;"></p>
-                </div>
-                <div style="background:rgba(40,167,69,0.08); padding:12px; border-radius:8px; border:1px solid #28a745; display:flex; flex-direction:column; gap:8px;">
-                    <h4 style="margin:0; color:#28a745;">🛡️ مركز الحماية والنسخ السحابية التلقائية</h4>
-                    <p style="margin:0; font-size:12px; color:var(--sub-text);">درع منع التصفير مفعّل تلقائياً، ويتم حفظ نسخة سحابية صامتة يومياً.</p>
-                    <button type="button" class="btn-save" style="background:#28a745; margin:0; font-size:14px; padding:10px;" onclick="runAutoCloudBackup(true)">☁️ أخذ نسخة احتياطية سحابية الآن</button>
-                    <button type="button" class="btn-save" style="background:#0b4a8f; margin:0; font-size:14px; padding:10px;" onclick="openCloudBackupsModal()">🕰️ استرجاع النسخ السحابية التلقائية (آخر 14 يوم)</button>
-                    <button type="button" class="btn-save" style="background:#17a2b8; margin:0; font-size:13px; padding:9px;" onclick="forcePushLocalToCloud()">⬆️ فرض رفع بيانات هذا الجهاز للسحابة</button>
-                </div>
                 <div class="input-group" style="background:rgba(220,53,69,0.05); padding:10px; border-radius:8px; border:1px dashed #dc3545;">
                     <label style="color:#dc3545;">🔑 الرمز السري للإدارة (PIN لقفل صلاحيات الكاشير)</label>
                     <input type="text" id="setAdminPin" placeholder="مثال: 1234">
@@ -457,27 +439,6 @@
     </div>  
 
     <div class="overlay" id="overlay" onclick="closeModals()"></div>  
-
-    <div class="modal" id="shieldModal" style="z-index:10050; border-top:4px solid #28a745;">
-        <h3 class="modal-header" style="color:#28a745;"><span>🛡️ درع حماية البيانات — تم إيقاف التصفير التلقائي</span></h3>
-        <div id="shieldModalBody" style="font-size:14px; line-height:1.7; margin-bottom:15px;"></div>
-        <button class="btn-save" style="background:#28a745; font-size:15px;" onclick="shieldUploadLocalToCloud()">⬆️ رفع بيانات الجهاز إلى السحابة فوراً (استعادة ومزامنة)</button>
-        <button class="btn-cancel" style="color:#dc3545; font-size:13px;" onclick="shieldAcceptEmptyCloud()">⚠️ تجاهل بيانات الجهاز والبدء من سحابة فارغة</button>
-    </div>
-
-    <div class="modal" id="branchLockModal" style="z-index:10060; border-top:4px solid #dc3545;">
-        <h3 class="modal-header" style="color:#dc3545;"><span>🔒 قفل حماية الفروع — تنبيه تداخل حسابات</span></h3>
-        <div id="branchLockModalBody" style="font-size:14px; line-height:1.7; margin-bottom:15px;"></div>
-        <button class="btn-save" style="background:#0b4a8f; font-size:15px;" onclick="cancelCrossBranchLogin()">🔙 العودة وتسجيل الخروج (إبقاء بيانات الفرع السابق آمنة)</button>
-        <button class="btn-save" style="background:#fd7e14; color:#000; font-size:14px;" onclick="confirmSwitchBranchSafely()">🔄 تبديل الفرع بأمان (تنزيل نسخة للفرع السابق + فتح الجديد)</button>
-    </div>
-
-    <div class="modal" id="cloudBackupsModal" style="z-index:10040; border-top:4px solid #0b4a8f;">
-        <h3 class="modal-header"><span>🕰️ النسخ الاحتياطية السحابية التلقائية</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>
-        <p style="font-size:13px; color:var(--sub-text); margin-top:0;">اختر أي يوم لاسترجاع كامل المواد والوصولات والديون الخاصة به بضغطة زر:</p>
-        <div id="cloudBackupsContainer" style="max-height:360px; overflow-y:auto; margin-bottom:15px;"></div>
-        <button class="btn-cancel" onclick="closeModals()">إغلاق</button>
-    </div>
 
     <div class="modal" id="pinModal">
         <h3 class="modal-header"><span>🔒 قفل الإدارة</span><span style="cursor:pointer; color:red;" onclick="closeModals()">✖</span></h3>
@@ -763,7 +724,7 @@
     if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "ضع_المفتاح_هنا") { firebase.initializeApp(firebaseConfig); isCloudReady = true; }
 
     let items = []; let archive = []; let expenses = []; let suppliers = []; let inventoryLog = []; let employees = []; let suspendedInvoices = []; let currentSupImageBase64 = ""; 
-    let settings = { branchName: "", currencyMode: "dual", usdRate: 150000, debtLimit: 0, accountant: "صباح", phone1: "07804884656", phone2: "07802204431", address: "الأنبار - الرمادي", logo: "https://cdn-icons-png.flaticon.com/512/2163/2163350.png", stampImage: "", adminPin: "1234" };  
+    let settings = { currencyMode: "dual", usdRate: 150000, debtLimit: 0, accountant: "صباح", phone1: "07804884656", phone2: "07802204431", address: "الأنبار - الرمادي", logo: "https://cdn-icons-png.flaticon.com/512/2163/2163350.png", stampImage: "", adminPin: "1234" };  
       
     let invoiceTabs = []; 
     let activeTabIndex = 0;
@@ -992,317 +953,29 @@
             if(currentUser) syncAllToCloud(); 
         });
 
-        window.__allowEmptySync = false;
-        let pendingCrossBranchUser = null;
-        let cloudListenersAttached = false;
-
-        function normalizeFirebaseList(val) {
-            if (!val) return [];
-            if (Array.isArray(val)) return val.filter(x => x !== null && x !== undefined);
-            if (typeof val === 'object') return Object.values(val).filter(x => x !== null && x !== undefined);
-            return [];
-        }
-
-        function updateBranchBadge() {
-            const badge = document.getElementById('branchHeaderBadge');
-            const emailDisp = document.getElementById('currentAccountEmailDisplay');
-            const bName = (settings.branchName || localStorage.getItem('lockedBranchName') || '').trim();
-            const emailStr = (currentUser && currentUser.email) ? currentUser.email : (localStorage.getItem('lockedBranchEmail') || '');
-
-            if (emailDisp) {
-                emailDisp.innerText = emailStr ? `📧 الحساب السحابي المرتبط: ${emailStr}` : '';
-            }
-            if (!badge) return;
-
-            if (bName) {
-                localStorage.setItem('lockedBranchName', bName);
-                if (bName.includes('جبس')) {
-                    badge.innerHTML = `🧱 ${bName}`;
-                    badge.style.background = '#17a2b8';
-                    badge.style.color = '#ffffff';
-                    badge.style.border = '1px solid #ffffff';
-                } else {
-                    badge.innerHTML = `🏛️ ${bName}`;
-                    badge.style.background = '#0b4a8f';
-                    badge.style.color = '#ffc107';
-                    badge.style.border = '1px solid #ffc107';
-                }
-            } else {
-                badge.innerHTML = emailStr ? `⚠️ اضغط لتسمية الفرع ✏️` : `🏛️ تحديد الفرع`;
-                badge.style.background = '#fd7e14';
-                badge.style.color = '#ffffff';
-                badge.style.border = '1px solid #ffffff';
-            }
-        }
-
-        function setBranchPreset(name) {
-            const inp = document.getElementById('setBranchName');
-            if (inp) inp.value = name;
-            settings.branchName = name;
-            localStorage.setItem('lockedBranchName', name);
-            localStorage.setItem('mySettingsData', JSON.stringify(settings));
-            syncCloud('settings', settings);
-            updateBranchBadge();
-            showToast(`✅ تم تثبيت هوية الفرع: ${name}`);
-        }
-
-        function promptQuickBranchSelect() {
-            const currentB = (settings.branchName || '').trim();
-            const choice = prompt(
-                "حدد اسم الفرع ليظهر في أعلى الشاشة ويميز هذا الحساب:\n" +
-                "اكتب (1) لـ: معرض الواجهات\n" +
-                "اكتب (2) لـ: محل الجبس بورد\n" +
-                "أو اكتب أي اسم مخصص للفرع:",
-                currentB || "1"
-            );
-            if (choice === null) return;
-            const trimmed = choice.trim();
-            let finalName = trimmed;
-            if (trimmed === "1") finalName = "معرض الواجهات";
-            else if (trimmed === "2") finalName = "محل الجبس بورد";
-            if (!finalName) return;
-
-            settings.branchName = finalName;
-            localStorage.setItem('lockedBranchName', finalName);
-            localStorage.setItem('mySettingsData', JSON.stringify(settings));
-            syncCloud('settings', settings);
-            initSettings();
-            updateBranchBadge();
-            showToast(`✅ تم تثبيت الفرع: ${finalName}`);
-        }
-
-        function getRawLocalStorageCounts() {
-            let lItems = [], lArchive = [];
-            try { lItems = JSON.parse(localStorage.getItem('myPricesData')) || []; } catch(e) {}
-            try { lArchive = JSON.parse(localStorage.getItem('myArchiveData')) || []; } catch(e) {}
-            return { itemsCount: Array.isArray(lItems) ? lItems.length : 0, archiveCount: Array.isArray(lArchive) ? lArchive.length : 0 };
-        }
-
-        function updateAuthLockedBanner() {
-            const banner = document.getElementById('authLockedBranchBanner');
-            if (!banner) return;
-            const lockedEmail = localStorage.getItem('lockedBranchEmail');
-            const lockedName = localStorage.getItem('lockedBranchName');
-            const counts = getRawLocalStorageCounts();
-            if (lockedEmail && (counts.itemsCount > 0 || counts.archiveCount > 0)) {
-                const label = lockedName ? `${lockedName} (${lockedEmail})` : lockedEmail;
-                banner.innerHTML = `🔒 هذا الجهاز يحتوي بيانات محفوظة لـ: <b>${label}</b><br>(${counts.itemsCount} مادة | ${counts.archiveCount} وصل)`;
-                banner.style.display = 'block';
-            } else {
-                banner.style.display = 'none';
-            }
-        }
-
-        function attachRealtimeCloudListeners(uRef) {
-            if (cloudListenersAttached) return;
-            cloudListenersAttached = true;
-
-            uRef.child('items').on('value', s => {
-                if (s.exists()) {
-                    let incoming = normalizeFirebaseList(s.val());
-                    if (incoming.length === 0 && items.length > 2 && !window.__allowEmptySync) {
-                        showToast("🛡️ الدرع منع مسح المواد لأن السحابة أرسلت قائمة فارغة!");
-                        return;
-                    }
-                    items = incoming;
-                    if (items.length > 0) localStorage.setItem('lastSafeCount_items', String(items.length));
-                    localStorage.setItem('myPricesData', JSON.stringify(items));
-                    renderItems();
-                } else if (items.length > 2 && !window.__allowEmptySync) {
-                    showToast("🛡️ الدرع حمى بيانات المواد المحلية من التصفير!");
-                }
-            });
-
-            uRef.child('archive').on('value', s => {
-                if (s.exists()) {
-                    let incoming = normalizeFirebaseList(s.val());
-                    if (incoming.length === 0 && archive.length > 2 && !window.__allowEmptySync) {
-                        showToast("🛡️ الدرع منع مسح الوصولات لأن السحابة أرسلت قائمة فارغة!");
-                        return;
-                    }
-                    archive = incoming;
-                    if (archive.length > 0) localStorage.setItem('lastSafeCount_archive', String(archive.length));
-                    localStorage.setItem('myArchiveData', JSON.stringify(archive));
-                    renderArchive();
-                    renderDebts();
-                    updateCustomerDropdown();
-                } else if (archive.length > 2 && !window.__allowEmptySync) {
-                    showToast("🛡️ الدرع حمى أرشيف الوصولات المحلي من التصفير!");
-                }
-            });
-
-            uRef.child('expenses').on('value', s => { if(s.exists()){ expenses = normalizeFirebaseList(s.val()); localStorage.setItem('myExpensesData', JSON.stringify(expenses)); renderExpenses(); } });
-            uRef.child('suppliers').on('value', s => { if(s.exists()){ suppliers = normalizeFirebaseList(s.val()); localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); renderSuppliers(); } });
-            uRef.child('inventoryLog').on('value', s => { if(s.exists()){ inventoryLog = normalizeFirebaseList(s.val()); localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); } });
-            uRef.child('employees').on('value', s => { if(s.exists()){ employees = normalizeFirebaseList(s.val()); localStorage.setItem('myEmployeesData', JSON.stringify(employees)); renderEmployees(); } });
-            uRef.child('suspendedInvoices').on('value', s => { if(s.exists()){ suspendedInvoices = normalizeFirebaseList(s.val()); localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); updateSuspendedCount(); } });
-            uRef.child('settings').on('value', s => {
-                if(s.exists()){
-                    let d = s.val();
-                    Object.assign(settings, d);
-                    localStorage.setItem('mySettingsData', JSON.stringify(settings));
-                    initSettings();
-                    updateBranchBadge();
-                }
-            });
-
-            setTimeout(() => { runAutoCloudBackup(false); }, 3500);
-        }
-
-        function shieldUploadLocalToCloud() {
-            if (!currentUser) return;
-            window.__allowEmptySync = true;
-            syncAllToCloud();
-            window.__allowEmptySync = false;
-            if (items.length > 0) localStorage.setItem('lastSafeCount_items', String(items.length));
-            if (archive.length > 0) localStorage.setItem('lastSafeCount_archive', String(archive.length));
-            document.getElementById('shieldModal').classList.remove('active');
-            document.getElementById('overlay').style.display = 'none';
-            const uRef = firebase.database().ref('users/' + currentUser.uid);
-            attachRealtimeCloudListeners(uRef);
-            runAutoCloudBackup(true);
-            showToast(`🛡️✅ تم رفع (${items.length} مادة و ${archive.length} وصل) إلى السحابة وحمايتها!`);
-        }
-
-        function shieldAcceptEmptyCloud() {
-            if (!confirm("⚠️ تحذير أخير: هل أنت متأكد 100% من تجاهل بيانات الجهاز والبدء من سحابة فارغة؟\n(سيتم تنزيل نسخة احتياطية على جهازك تلقائياً قبل المتابعة)")) return;
-            exportBackup();
-            window.__allowEmptySync = true;
-            items = []; archive = []; expenses = []; suppliers = []; inventoryLog = []; employees = []; suspendedInvoices = [];
-            localStorage.setItem('myPricesData', '[]');
-            localStorage.setItem('myArchiveData', '[]');
-            localStorage.setItem('lastSafeCount_items', '0');
-            localStorage.setItem('lastSafeCount_archive', '0');
-            document.getElementById('shieldModal').classList.remove('active');
-            document.getElementById('overlay').style.display = 'none';
-            const uRef = firebase.database().ref('users/' + currentUser.uid);
-            attachRealtimeCloudListeners(uRef);
-            setTimeout(() => { window.__allowEmptySync = false; }, 2000);
-            renderItems(); renderArchive(); renderDebts();
-        }
-
-        function cancelCrossBranchLogin() {
-            pendingCrossBranchUser = null;
-            document.getElementById('branchLockModal').classList.remove('active');
-            document.getElementById('overlay').style.display = 'none';
-            if (isCloudReady) firebase.auth().signOut();
-            showToast("تم إلغاء الدخول والحفاظ على بيانات الفرع الأصلي.");
-        }
-
-        function confirmSwitchBranchSafely() {
-            if (!pendingCrossBranchUser) return;
-            // 1. Export previous branch local data automatically before clearing
-            try {
-                const prevEmail = (localStorage.getItem('lockedBranchEmail') || 'Previous_Branch').replace(/[^a-zA-Z0-9._-]/g, '_');
-                const prevBackup = {
-                    items: JSON.parse(localStorage.getItem('myPricesData') || '[]'),
-                    archive: JSON.parse(localStorage.getItem('myArchiveData') || '[]'),
-                    expenses: JSON.parse(localStorage.getItem('myExpensesData') || '[]'),
-                    suppliers: JSON.parse(localStorage.getItem('mySuppliersData') || '[]'),
-                    inventoryLog: JSON.parse(localStorage.getItem('myInventoryLog') || '[]'),
-                    employees: JSON.parse(localStorage.getItem('myEmployeesData') || '[]'),
-                    suspendedInvoices: JSON.parse(localStorage.getItem('mySuspendedData') || '[]'),
-                    settings: JSON.parse(localStorage.getItem('mySettingsData') || '{}')
-                };
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(new Blob([JSON.stringify(prevBackup, null, 2)], { type: 'application/json' }));
-                a.download = `SwitchBranch_Backup_${prevEmail}_${new Date().toISOString().slice(0,10)}.json`;
-                a.click();
-            } catch(e) {}
-
-            // 2. Clear previous branch working keys safely
-            ['myPricesData','myArchiveData','myExpensesData','mySuppliersData','myInventoryLog','myEmployeesData','mySuspendedData','mySettingsData','myInvoiceTabs','myActiveTabIndex','lastSafeCount_items','lastSafeCount_archive'].forEach(k => localStorage.removeItem(k));
-            items = []; archive = []; expenses = []; suppliers = []; inventoryLog = []; employees = []; suspendedInvoices = [];
-            settings.branchName = "";
-            localStorage.removeItem('lockedBranchName');
-
-            const nextUser = pendingCrossBranchUser;
-            pendingCrossBranchUser = null;
-            document.getElementById('branchLockModal').classList.remove('active');
-            document.getElementById('overlay').style.display = 'none';
-            proceedWithAuthenticatedUser(nextUser);
-        }
-
-        function proceedWithAuthenticatedUser(user) {
-            currentUser = user;
-            cloudListenersAttached = false;
-            localStorage.setItem('lockedBranchUid', user.uid);
-            localStorage.setItem('lockedBranchEmail', user.email || '');
-
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-
-            // Load local vault first so local cache is always preserved
-            loadLocalVaultData();
-            applyRoleRestrictions();
-            updateBranchBadge();
-
-            const db = firebase.database();
-            let uRef = db.ref('users/' + currentUser.uid);
-
-            // Integrity Shield Check before attaching live overwrite listeners
-            uRef.once('value').then(snap => {
-                const cloudItems = normalizeFirebaseList(snap.child('items').val());
-                const cloudArchive = normalizeFirebaseList(snap.child('archive').val());
-                const localHasData = (items.length > 0 || archive.length > 0);
-                const cloudHasData = (cloudItems.length > 0 || cloudArchive.length > 0);
-
-                if (localHasData && !cloudHasData) {
-                    const bodyEl = document.getElementById('shieldModalBody');
-                    if (bodyEl) {
-                        bodyEl.innerHTML = `
-                            <div style="background:rgba(40,167,69,0.1); border:1px solid #28a745; padding:12px; border-radius:8px; margin-bottom:10px;">
-                                <b>✅ بيانات محفوظة على هذا الجهاز:</b><br>
-                                • عدد المواد: <b>${items.length}</b> مادة<br>
-                                • عدد الوصولات: <b>${archive.length}</b> وصل
-                            </div>
-                            <p style="margin:0;">قاعدة البيانات السحابية للحساب (<b>${currentUser.email || ''}</b>) فارغة حالياً. قام الدرع بحماية بياناتك ومنع مسحها. اضغط الزر الأخضر لرفعها ومزامنتها فوراً:</p>
-                        `;
-                    }
-                    document.getElementById('overlay').style.display = 'block';
-                    document.getElementById('shieldModal').classList.add('active');
-                    return;
-                }
-
-                attachRealtimeCloudListeners(uRef);
-                showToast("تم تسجيل الدخول والمزامنة السحابية بأمان!");
-            }).catch(err => {
-                attachRealtimeCloudListeners(uRef);
-            });
-        }
-
         if(isCloudReady) {
-            updateAuthLockedBanner();
             firebase.auth().onAuthStateChanged(user => {
                 if (user) {
-                    const lockedUid = localStorage.getItem('lockedBranchUid');
-                    const counts = getRawLocalStorageCounts();
-                    const hasExistingLocalData = (counts.itemsCount > 0 || counts.archiveCount > 0);
-
-                    if (lockedUid && lockedUid !== user.uid && hasExistingLocalData) {
-                        pendingCrossBranchUser = user;
-                        const prevEmail = localStorage.getItem('lockedBranchEmail') || 'حساب فرع سابق';
-                        const prevName = localStorage.getItem('lockedBranchName') || prevEmail;
-                        const lockBody = document.getElementById('branchLockModalBody');
-                        if (lockBody) {
-                            lockBody.innerHTML = `
-                                <p style="margin-top:0;">هذا الجهاز مقفل حالياً على بيانات: <b style="color:#0b4a8f;">${prevName}</b> (${counts.itemsCount} مادة | ${counts.archiveCount} وصل).</p>
-                                <p>وأنت تحاول الدخول الآن بحساب مختلف: <b style="color:#dc3545;">${user.email || user.uid}</b>.</p>
-                                <p style="background:rgba(255,193,7,0.15); padding:8px; border-radius:6px; font-size:13px; margin-bottom:0;">🛡️ لحماية بيانات الفرعين من الاختلاط أو المسح، تم إيقاف المزامنة التلقائية. اختر الإجراء المناسب:</p>
-                            `;
-                        }
-                        document.getElementById('auth-screen').style.display = 'none';
-                        document.getElementById('main-app').style.display = 'block';
-                        document.getElementById('overlay').style.display = 'block';
-                        document.getElementById('branchLockModal').classList.add('active');
-                        return;
-                    }
-
-                    proceedWithAuthenticatedUser(user);
+                    currentUser = user; 
+                    document.getElementById('auth-screen').style.display = 'none'; 
+                    document.getElementById('main-app').style.display = 'block'; 
+                    applyRoleRestrictions();
+                    
+                    const db = firebase.database(); 
+                    let uRef = db.ref('users/' + currentUser.uid);
+                    
+                    uRef.child('items').on('value', s => { if(s.exists()){ items = s.val(); localStorage.setItem('myPricesData', JSON.stringify(items)); renderItems(); } });
+                    uRef.child('archive').on('value', s => { if(s.exists()){ archive = s.val(); localStorage.setItem('myArchiveData', JSON.stringify(archive)); renderArchive(); renderDebts(); updateCustomerDropdown(); } });
+                    uRef.child('expenses').on('value', s => { if(s.exists()){ expenses = s.val(); localStorage.setItem('myExpensesData', JSON.stringify(expenses)); renderExpenses(); } });
+                    uRef.child('suppliers').on('value', s => { if(s.exists()){ suppliers = s.val(); localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); renderSuppliers(); } });
+                    uRef.child('inventoryLog').on('value', s => { if(s.exists()){ inventoryLog = s.val(); localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); } }); 
+                    uRef.child('employees').on('value', s => { if(s.exists()){ employees = s.val(); localStorage.setItem('myEmployeesData', JSON.stringify(employees)); renderEmployees(); } }); 
+                    uRef.child('suspendedInvoices').on('value', s => { if(s.exists()){ suspendedInvoices = s.val(); localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); updateSuspendedCount(); } }); 
+                    uRef.child('settings').on('value', s => { if(s.exists()){ let d = s.val(); Object.assign(settings, d); localStorage.setItem('mySettingsData', JSON.stringify(settings)); initSettings(); } });
+                    
+                    showToast("تم تسجيل الدخول والمزامنة السحابية!");
                 } else { 
                     currentUser = null; 
-                    cloudListenersAttached = false;
-                    updateAuthLockedBanner();
                     if(!navigator.onLine) {
                         enterAppOfflineMode();
                     } else {
@@ -1316,7 +989,6 @@
             document.getElementById('main-app').style.display = 'block'; 
             loadLocalVaultData();
             applyRoleRestrictions();
-            updateBranchBadge();
         }
     }
 
@@ -1369,9 +1041,10 @@
     }
     
     function logoutApp() { 
-        if(confirm("تأكيد تسجيل الخروج؟\n(ستبقى بيانات هذا الفرع محفوظة ومحمية على هذا الجهاز لحين عودتك لنفس الحساب)")) { 
+        if(confirm("تأكيد تسجيل الخروج؟")) { 
             if(isCloudReady) firebase.auth().signOut();
-            setTimeout(() => { window.location.reload(); }, 250);
+            localStorage.clear(); 
+            window.location.reload(); 
         } 
     }
 
@@ -1456,16 +1129,6 @@
 
     function syncCloud(node, data) { 
         if(isCloudReady && currentUser && navigator.onLine) {
-            if ((node === 'items' || node === 'archive') && Array.isArray(data)) {
-                const lastSafe = parseInt(localStorage.getItem('lastSafeCount_' + node) || '0', 10);
-                if (data.length === 0 && lastSafe > 2 && !window.__allowEmptySync) {
-                    showToast("🛡️ درع الحماية منع مسح البيانات السحابية!");
-                    return;
-                }
-                if (data.length > 0) {
-                    localStorage.setItem('lastSafeCount_' + node, String(data.length));
-                }
-            }
             firebase.database().ref('users/' + currentUser.uid + '/' + node).set(data); 
         }
     }
@@ -1480,146 +1143,6 @@
         syncCloud('suspendedInvoices', suspendedInvoices); 
         syncCloud('settings', settings); 
         syncAllPortalsToCloud();
-    }
-
-    function forcePushLocalToCloud() {
-        if (!isCloudReady || !currentUser || !navigator.onLine) {
-            alert("⚠️ يجب أن تكون متصلاً بالإنترنت ومسجلاً للدخول.");
-            return;
-        }
-        if (!confirm(`هل تريد رفع بيانات هذا الجهاز (${items.length} مادة و ${archive.length} وصل) إلى السحابة وتحديثها؟`)) return;
-        window.__allowEmptySync = true;
-        syncAllToCloud();
-        window.__allowEmptySync = false;
-        runAutoCloudBackup(true);
-        showToast("✅ تم فرض رفع جميع بيانات الجهاز للسحابة بنجاح!");
-    }
-
-    function getTodayIsoKey() {
-        const d = new Date();
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        return `${yyyy}-${mm}-${dd}`;
-    }
-
-    function runAutoCloudBackup(forceManual = false) {
-        if (!isCloudReady || !currentUser || !navigator.onLine) return;
-        if (items.length === 0 && archive.length === 0) {
-            if (forceManual) alert("⚠️ لا توجد بيانات حالياً لأخذ نسخة احتياطية منها.");
-            return;
-        }
-        const todayKey = getTodayIsoKey();
-        const doneFlagKey = `autoBackupDone_${currentUser.uid}_${todayKey}`;
-        if (!forceManual && localStorage.getItem(doneFlagKey) === '1') return;
-
-        const backupRef = firebase.database().ref(`users/${currentUser.uid}/auto_backups`);
-        const snapshotPayload = {
-            dateKey: todayKey,
-            timestamp: new Date().toLocaleString('en-GB'),
-            branchName: (settings.branchName || currentUser.email || 'الفرع').trim(),
-            itemsCount: items.length,
-            archiveCount: archive.length,
-            suppliersCount: suppliers.length,
-            data: {
-                items, archive, expenses, suppliers, inventoryLog, employees, suspendedInvoices, settings
-            }
-        };
-
-        backupRef.child(todayKey).set(snapshotPayload).then(() => {
-            localStorage.setItem(doneFlagKey, '1');
-            if (forceManual) showToast(`☁️✅ تم حفظ نسخة سحابية بتاريخ ${todayKey}!`);
-            // Keep only last 14 daily backups
-            backupRef.once('value').then(allSnap => {
-                if (!allSnap.exists()) return;
-                const keys = Object.keys(allSnap.val()).sort();
-                if (keys.length > 14) {
-                    keys.slice(0, keys.length - 14).forEach(oldKey => {
-                        backupRef.child(oldKey).remove();
-                    });
-                }
-            });
-        }).catch(err => {
-            if (forceManual) alert("تعذر حفظ النسخة السحابية: " + err.message);
-        });
-    }
-
-    function openCloudBackupsModal() {
-        if (!isCloudReady || !currentUser || !navigator.onLine) {
-            alert("⚠️ يرجى الاتصال بالإنترنت لعرض النسخ السحابية.");
-            return;
-        }
-        const cont = document.getElementById('cloudBackupsContainer');
-        cont.innerHTML = "<p style='text-align:center; padding:15px;'>⏳ جاري جلب النسخ الاحتياطية من السحابة...</p>";
-        document.getElementById('overlay').style.display = 'block';
-        setTimeout(() => { document.getElementById('cloudBackupsModal').classList.add('active'); }, 10);
-
-        firebase.database().ref(`users/${currentUser.uid}/auto_backups`).once('value').then(snap => {
-            if (!snap.exists()) {
-                cont.innerHTML = "<p style='text-align:center; color:var(--sub-text); padding:15px;'>لا توجد نسخ سحابية محفوظة بعد. اضغط على (أخذ نسخة احتياطية سحابية الآن) لحفظ أول نسخة.</p>";
-                return;
-            }
-            const all = snap.val();
-            const keys = Object.keys(all).sort().reverse();
-            let html = "";
-            keys.forEach(k => {
-                const entry = all[k];
-                html += `
-                    <div class="item-card" style="border-right-color:#28a745; margin-bottom:8px;">
-                        <div class="item-info">
-                            <h4 style="margin:0 0 4px 0; color:#0b4a8f;">📅 نسخة يوم: ${entry.dateKey || k}</h4>
-                            <p style="font-size:12px; margin:0;">🏢 ${entry.branchName || ''} | 🕒 ${entry.timestamp || ''}</p>
-                            <p style="font-size:12px; color:#28a745; margin:4px 0 0 0;">📦 المواد: <b>${entry.itemsCount || 0}</b> | 🧾 الوصولات: <b>${entry.archiveCount || 0}</b></p>
-                        </div>
-                        <button class="pay-btn" style="padding:8px 12px; font-size:13px;" onclick="restoreCloudBackupByKey('${k}')">🔄 استرجاع</button>
-                    </div>`;
-            });
-            cont.innerHTML = html;
-        }).catch(err => {
-            cont.innerHTML = `<p style='text-align:center; color:#dc3545;'>خطأ في جلب النسخ: ${err.message}</p>`;
-        });
-    }
-
-    function restoreCloudBackupByKey(dateKey) {
-        if (!confirm(`هل تريد استرجاع بيانات نسخة يوم (${dateKey})؟
-سيتم استبدال البيانات الحالية ببيانات هذا التاريخ ومزامنتها.`)) return;
-        firebase.database().ref(`users/${currentUser.uid}/auto_backups/${dateKey}`).once('value').then(snap => {
-            if (!snap.exists() || !snap.val().data) {
-                alert("⚠️ النسخة غير صالحة!");
-                return;
-            }
-            const d = snap.val().data;
-            window.__allowEmptySync = true;
-            items = normalizeFirebaseList(d.items);
-            archive = normalizeFirebaseList(d.archive);
-            expenses = normalizeFirebaseList(d.expenses);
-            suppliers = normalizeFirebaseList(d.suppliers);
-            inventoryLog = normalizeFirebaseList(d.inventoryLog);
-            employees = normalizeFirebaseList(d.employees);
-            suspendedInvoices = normalizeFirebaseList(d.suspendedInvoices);
-            if (d.settings) Object.assign(settings, d.settings);
-
-            localStorage.setItem('myPricesData', JSON.stringify(items));
-            localStorage.setItem('myArchiveData', JSON.stringify(archive));
-            localStorage.setItem('myExpensesData', JSON.stringify(expenses));
-            localStorage.setItem('mySuppliersData', JSON.stringify(suppliers));
-            localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog));
-            localStorage.setItem('myEmployeesData', JSON.stringify(employees));
-            localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices));
-            localStorage.setItem('mySettingsData', JSON.stringify(settings));
-
-            syncAllToCloud();
-            window.__allowEmptySync = false;
-
-            initSettings();
-            updateBranchBadge();
-            renderItems();
-            renderArchive();
-            renderDebts();
-            updateCustomerDropdown();
-            closeModals();
-            showToast(`✅ تم استرجاع نسخة يوم (${dateKey}) بنجاح!`);
-        });
     }
     
     function logInventory(itemName, type, qtyChange, note) { 
@@ -1638,7 +1161,7 @@
     });
     
     function closeModals() {  
-        const modals = ["addModal", "invoiceModal", "payModal", "historyModal", "itemHistoryModal", "empModal", "empAdjustModal", "suspendedModal", "supImageModal", "lowStockModal", "pinModal", "generalPayModal", "cloudBackupsModal"];
+        const modals = ["addModal", "invoiceModal", "payModal", "historyModal", "itemHistoryModal", "empModal", "empAdjustModal", "suspendedModal", "supImageModal", "lowStockModal", "pinModal", "generalPayModal"];
         modals.forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove("active"); });
         
         setTimeout(() => { 
@@ -1651,7 +1174,6 @@
 
     function initSettings() { 
         document.documentElement.style.setProperty('--bg-logo', `url('${settings.logo}')`); 
-        if(document.getElementById('setBranchName')) document.getElementById('setBranchName').value = settings.branchName || "";
         if(document.getElementById('setCurrencyMode')) document.getElementById('setCurrencyMode').value = settings.currencyMode || "dual";
         document.getElementById('setUsdRate').value = settings.usdRate; 
         if(document.getElementById('setDebtLimit')) document.getElementById('setDebtLimit').value = settings.debtLimit || 0;
@@ -1696,10 +1218,6 @@
 
     function saveSettings() { 
         if(currentRole !== 'admin') return alert("صلاحية الإدارة فقط!");
-        if(document.getElementById('setBranchName')) {
-            settings.branchName = document.getElementById('setBranchName').value.trim();
-            localStorage.setItem('lockedBranchName', settings.branchName);
-        }
         settings.currencyMode = document.getElementById('setCurrencyMode').value || "dual";
         settings.usdRate = document.getElementById('setUsdRate').value; 
         settings.debtLimit = parseFloat(document.getElementById('setDebtLimit').value) || 0;
@@ -1712,8 +1230,7 @@
         localStorage.setItem('mySettingsData', JSON.stringify(settings)); 
         syncCloud('settings', settings); 
         initSettings(); 
-        updateBranchBadge();
-        showToast("تم حفظ الإعدادات وهوية الفرع بنجاح!"); 
+        showToast("تم حفظ الإعدادات بنجاح!"); 
     }  
 
     function bulkUpdatePrices() {
@@ -3694,35 +3211,42 @@
                 </table>
             </div>
 
-            <div style="margin-top: 15px; font-size: 14px; font-weight: bold; text-align: center; border: 2px dashed #dc3545; padding: 10px; border-radius: 8px; color: #dc3545; background-color: rgba(220, 53, 69, 0.03);">
+                       <div style="margin-top: 15px; font-size: 14px; font-weight: bold; text-align: center; border: 2px dashed #dc3545; padding: 10px; border-radius: 8px; color: #dc3545; background-color: rgba(220, 53, 69, 0.03);">
                 ⚠️ شروط المحل: البضاعة لا تسترد ولا تستبدل بعد القص أو الاستعمال، ويحق للزبون الإرجاع خلال 7 أيام فقط بشرط سلامة المادة
             </div>
             
-            <div class="print-footer" style="margin-top:20px; align-items:flex-start;">
-                <div class="signatures" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:25px; margin-top:0;">
-                    <div style="text-align:center; font-weight:bold;">التوقيع / الختم : ${stampHTML}</div>
-                    <div style="text-align:center; font-weight:bold; color:#0b4a8f; border-top:1px dashed #0b4a8f; padding-top:10px;">توقيع الزبون المستلم (مقرّاً بالدين)<br><br>.........................</div>
-                </div>
-                
-                <div class="print-summary-box" style="flex:1.2; margin-left:15px; border-color:#0b4a8f;">
-                    ${deliveryPrintRow}${discountPrintRow}
-                    <div class="print-summary-row row-blue"><div class="print-summary-label">مجموع قائمة اليوم:</div><div class="print-summary-val" style="line-height:1.2;">${displayTotalText}</div></div>`;
-        
-        if (prevDebt !== 0) {
-            printHTML += `<div class="print-summary-row" style="background:#fff3cd !important;"><div class="print-summary-label" style="background:#ffc107 !important; color:#000 !important;">ديون سابقة بذمته:</div><div class="print-summary-val" style="color:#856404; font-weight:bold;">${formatDualAmountHTML(prevDebt, true, activeRate, activeMode)}</div></div>`;
-            printHTML += `<div class="print-summary-row row-blue"><div class="print-summary-label" style="font-size:17px;">المطلوب الكلي:</div><div class="print-summary-val" style="font-size:18px; color:#0b4a8f;">${formatDualAmountHTML(grandTotal, true, activeRate, activeMode)}</div></div>`;
-        }
-        
-        printHTML += `
-                    <div class="print-summary-row row-blue"><div class="print-summary-label">المبلغ الواصل الآن:</div><div class="print-summary-val" id="printPaid">${formatDualAmountHTML(paidAmt, true, activeRate, activeMode)}</div></div>
-                    <div class="print-summary-row row-red"><div class="print-summary-label" style="font-size:17px;">المتبقي النهائي:</div><div class="print-summary-val" id="printRemaining" style="font-size:19px;">${formatDualAmountHTML(remAmt, true, activeRate, activeMode)}</div></div>
-                    <div style="padding:10px; text-align:center; background:#f0f4f8; border-top:2px solid #0b4a8f; font-size:14px; font-weight:bold; color:#333;">
-                        المبلغ كتابةً: ${tafqeetText}
+            <div style="margin-top:12px; border:2px solid #0b4a8f; border-radius:8px; overflow:hidden; background:#fff;">
+                <div style="display:flex; flex-wrap:nowrap; width:100%; border-bottom:1px solid #0b4a8f; text-align:center;">
+                    <div style="flex:1; border-left:1px solid #0b4a8f; padding:6px 4px; background:#f8f9fa;">
+                        <div style="font-size:12px; font-weight:bold; color:#6f42c1; margin-bottom:2px;">الخصم الممنوح</div>
+                        <div style="font-size:13px; font-weight:bold; color:#6f42c1; line-height:1.25;">${formatDualAmountHTML(discountAmt, true, activeRate, activeMode)}</div>
                     </div>
+                    <div style="flex:1; border-left:1px solid #0b4a8f; padding:6px 4px; background:#e6f0fa;">
+                        <div style="font-size:12px; font-weight:bold; color:#0b4a8f; margin-bottom:2px;">مجموع القائمة</div>
+                        <div style="font-size:13px; font-weight:bold; color:#0b4a8f; line-height:1.25;">${displayTotalText}</div>
+                    </div>
+                    <div style="flex:1; border-left:1px solid #0b4a8f; padding:6px 4px; background:#e8f5e9;">
+                        <div style="font-size:12px; font-weight:bold; color:#1e7e34; margin-bottom:2px;">الواصل</div>
+                        <div id="printPaid" style="font-size:13px; font-weight:bold; color:#1e7e34; line-height:1.25;">${formatDualAmountHTML(paidAmt, true, activeRate, activeMode)}</div>
+                    </div>
+                    <div style="flex:1; padding:6px 4px; background:#fbecec;">
+                        <div style="font-size:12px; font-weight:bold; color:#c82333; margin-bottom:2px;">المتبقي النهائي</div>
+                        <div id="printRemaining" style="font-size:14px; font-weight:900; color:#c82333; line-height:1.25;">${formatDualAmountHTML(remAmt, true, activeRate, activeMode)}</div>
+                    </div>
+                </div>
+                ${(deliveryFee > 0 || prevDebt !== 0) ? `
+                <div style="display:flex; justify-content:space-around; padding:5px 8px; font-size:12px; font-weight:bold; background:#fff8e1; border-bottom:1px solid #ddd; color:#333;">
+                    ${deliveryFee > 0 ? `<span>أجور النقل/العمل: ${formatDualAmountText(deliveryFee, activeRate, activeMode)}</span>` : ''}
+                    ${prevDebt !== 0 ? `<span style="color:#856404;">ديون سابقة: ${formatDualAmountText(prevDebt, activeRate, activeMode)}</span>` : ''}
+                    ${prevDebt !== 0 ? `<span style="color:#0b4a8f;">المطلوب الكلي: ${formatDualAmountText(grandTotal, activeRate, activeMode)}</span>` : ''}
+                </div>` : ''}
+                <div style="padding:6px 10px; text-align:center; background:#f0f4f8; font-size:12px; font-weight:bold; color:#333;">
+                    المبلغ كتابةً: ${tafqeetText}
                 </div>
             </div>`;  
         
-        document.getElementById("printSection").innerHTML = printHTML; 
+        document.getElementById("printSection").innerHTML = printHTML;
+
         if(activeId && document.getElementById(activeId)) { let el = document.getElementById(activeId); el.focus(); } 
     }
     
@@ -3923,7 +3447,7 @@
     
     function exportBackup() { let allData = { items, archive, expenses, suppliers, inventoryLog, employees, suspendedInvoices, settings }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData)); const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "Aljelibawi_Full_Backup.json"); dl.click(); showToast("تم الحفظ الشامل محلياً!"); }  
     
-    function importBackup(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { window.__allowEmptySync = true; const imp = JSON.parse(e.target.result); if(Array.isArray(imp)) { items = imp; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } else { if(imp.items) { items = imp.items; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } if(imp.archive) { archive = imp.archive; localStorage.setItem('myArchiveData', JSON.stringify(archive)); syncCloud('archive', archive); syncAllPortalsToCloud(); } if(imp.expenses) { expenses = imp.expenses; localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses); } if(imp.suppliers) { suppliers = imp.suppliers; localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); syncCloud('suppliers', suppliers); } if(imp.inventoryLog) { inventoryLog = imp.inventoryLog; localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); syncCloud('inventoryLog', inventoryLog); } if(imp.employees) { employees = imp.employees; localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); } if(imp.suspendedInvoices) { suspendedInvoices = imp.suspendedInvoices; localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); syncCloud('suspendedInvoices', suspendedInvoices); updateSuspendedCount(); } if(imp.settings) { Object.assign(settings, imp.settings); localStorage.setItem('mySettingsData', JSON.stringify(settings)); syncCloud('settings', settings); initSettings();} } window.__allowEmptySync = false; updateBranchBadge(); renderItems(); updateCustomerDropdown(); showToast("تم الاسترجاع بنجاح!"); } catch (err) { window.__allowEmptySync = false; alert("ملف غير صالح!"); } }; reader.readAsText(file); event.target.value = ''; }  
+    function importBackup(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const imp = JSON.parse(e.target.result); if(Array.isArray(imp)) { items = imp; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } else { if(imp.items) { items = imp.items; localStorage.setItem('myPricesData', JSON.stringify(items)); syncCloud('items', items); } if(imp.archive) { archive = imp.archive; localStorage.setItem('myArchiveData', JSON.stringify(archive)); syncCloud('archive', archive); syncAllPortalsToCloud(); } if(imp.expenses) { expenses = imp.expenses; localStorage.setItem('myExpensesData', JSON.stringify(expenses)); syncCloud('expenses', expenses); } if(imp.suppliers) { suppliers = imp.suppliers; localStorage.setItem('mySuppliersData', JSON.stringify(suppliers)); syncCloud('suppliers', suppliers); } if(imp.inventoryLog) { inventoryLog = imp.inventoryLog; localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog)); syncCloud('inventoryLog', inventoryLog); } if(imp.employees) { employees = imp.employees; localStorage.setItem('myEmployeesData', JSON.stringify(employees)); syncCloud('employees', employees); } if(imp.suspendedInvoices) { suspendedInvoices = imp.suspendedInvoices; localStorage.setItem('mySuspendedData', JSON.stringify(suspendedInvoices)); syncCloud('suspendedInvoices', suspendedInvoices); updateSuspendedCount(); } if(imp.settings) { Object.assign(settings, imp.settings); localStorage.setItem('mySettingsData', JSON.stringify(settings)); syncCloud('settings', settings); initSettings();} } renderItems(); updateCustomerDropdown(); showToast("تم الاسترجاع بنجاح!"); } catch (err) { alert("ملف غير صالح!"); } }; reader.readAsText(file); event.target.value = ''; }  
     
     function annualArchiving() {
         if(currentRole !== 'admin') { alert("هذه الصلاحية للمدير فقط!"); return; }
@@ -3942,13 +3466,11 @@
 
             let newInventoryLog = inventoryLog.slice(0, 100);
 
-            window.__allowEmptySync = true;
             archive = newArchive;
             inventoryLog = newInventoryLog;
 
             localStorage.setItem('myArchiveData', JSON.stringify(archive));
             syncCloud('archive', archive);
-            window.__allowEmptySync = false;
             
             localStorage.setItem('myInventoryLog', JSON.stringify(inventoryLog));
             syncCloud('inventoryLog', inventoryLog);
@@ -4247,62 +3769,14 @@
     if (!copilotTtsEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
   }
 
-  window.__copilotVoices = [];
-  function loadCopilotVoices() {
-    if (!('speechSynthesis' in window)) return [];
-    const list = window.speechSynthesis.getVoices() || [];
-    if (list.length > 0) window.__copilotVoices = list;
-    return window.__copilotVoices;
-  }
-  if ('speechSynthesis' in window) {
-    loadCopilotVoices();
-    window.speechSynthesis.onvoiceschanged = loadCopilotVoices;
-  }
-
-  function pickBestArabicVoice() {
-    const voices = loadCopilotVoices();
-    if (!voices || voices.length === 0) return null;
-    const isAr = (v) => {
-      const lang = (v.lang || '').toLowerCase();
-      const name = (v.name || '').toLowerCase();
-      return lang.startsWith('ar') || name.includes('arabic') || name.includes('العربية') ||
-             /hoda|naayf|salma|hamed|maged|laila|tarik|zariyah|shakir|rana|bassel/i.test(name);
-    };
-    const arVoices = voices.filter(isAr);
-    if (arVoices.length === 0) return null;
-    // Prefer Online/Natural voices first, then ar-IQ / ar-SA / ar-EG
-    return arVoices.find(v => /natural|online/i.test(v.name)) ||
-           arVoices.find(v => (v.lang || '').toLowerCase().includes('ar-iq')) ||
-           arVoices.find(v => (v.lang || '').toLowerCase().includes('ar-sa')) ||
-           arVoices.find(v => (v.lang || '').toLowerCase().includes('ar-eg')) ||
-           arVoices[0];
-  }
-
   function speakCopilotArabic(text) {
     if (!copilotTtsEnabled || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const cleanSpeech = text.replace(/[*#•📊💰⏰🏆⚠️🏢✅💬📋💵]/g, '').replace(/\n+/g, ' ، ');
-    const runSpeak = () => {
-      const arVoice = pickBestArabicVoice();
-      if (!arVoice) {
-        const out = document.getElementById('copilotOutputArea');
-        if (out && !out.innerHTML.includes('copilot-voice-hint')) {
-          out.innerHTML += `<div class="copilot-voice-hint" style="margin-top:8px; padding:8px 10px; border-radius:8px; background:rgba(255,193,7,0.12); border:1px dashed #ffc107; font-size:12px; color:#ffd43b;">💡 ملاحظة: متصفح Chrome على هذا الجهاز لا يعرض حزمة الصوت العربي (SAPI5). لكي ينطق المساعد بالعربية فوراً بدون إعدادات إضافية، افتح رابط موقعك على متصفح <b>Microsoft Edge</b>.</div>`;
-        }
-        return;
-      }
-      const utter = new SpeechSynthesisUtterance(cleanSpeech);
-      utter.voice = arVoice;
-      utter.lang = arVoice.lang || 'ar-EG';
-      utter.rate = 1.02;
-      window.speechSynthesis.speak(utter);
-    };
-
-    if (loadCopilotVoices().length === 0) {
-      setTimeout(runSpeak, 250);
-    } else {
-      runSpeak();
-    }
+    const utter = new SpeechSynthesisUtterance(cleanSpeech);
+    utter.lang = 'ar-SA';
+    utter.rate = 1.05;
+    window.speechSynthesis.speak(utter);
   }
 
   function toggleCopilotVoice() {
